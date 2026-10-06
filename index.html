@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Tsuzuri</title>
+  </head>
+  <body>
+    <div id="app" class="app-container">
+      <!-- Minimalist App Chrome -->
+      <header class="app-header" id="app-header">
+        <div class="header-left">
+          <span class="app-name">綴り</span>
+          <span class="doc-title-wrapper">
+            <span id="doc-title" class="doc-title">untitled.md</span>
+            <span id="dirty-indicator" class="dirty-indicator" title="Unsaved changes" style="display: none;">•</span>
+          </span>
+        </div>
+
+        <div class="header-center">
+          <div class="view-switcher" role="tablist" aria-label="Document View">
+            <button id="btn-view-reader" class="view-btn active" role="tab" aria-selected="true" title="Reader View (Ctrl+E)">
+              Reader
+            </button>
+            <button id="btn-view-editor" class="view-btn" role="tab" aria-selected="false" title="Editor View (Ctrl+E)">
+              Editor
+            </button>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <button id="btn-toc" class="tool-btn" title="Table of Contents" aria-label="Table of Contents">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="6" x2="20" y2="6"></line>
+              <line x1="4" y1="12" x2="14" y2="12"></line>
+              <line x1="4" y1="18" x2="18" y2="18"></line>
+            </svg>
+            <span class="btn-label">TOC</span>
+          </button>
+
+          <button id="btn-open" class="tool-btn" title="Open Markdown File (Ctrl+O)" aria-label="Open Document">
+            <span class="btn-label">Open</span>
+          </button>
+
+          <button id="btn-save" class="tool-btn" title="Save Document (Ctrl+S)" aria-label="Save Document">
+            <span class="btn-label">Save</span>
+          </button>
+
+          <div class="theme-dropdown-container">
+            <button id="btn-theme" class="tool-btn theme-btn" title="Toggle Theme" aria-label="Theme mode">
+              <span id="theme-icon">◐</span>
+              <span id="theme-label" class="btn-label">System</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Primary Content Area -->
+      <main class="app-content">
+        <!-- 1. Reader View (Typeset Document, Mutually Exclusive) -->
+        <section id="reader-view" class="view-pane reader-pane active" aria-label="Rendered Document" tabindex="0">
+          <article id="reader-content" class="reader-content"></article>
+        </section>
+
+        <!-- 2. Editor View (Raw Markdown, Mutually Exclusive) -->
+        <section id="editor-view" class="view-pane editor-pane" aria-label="Markdown Editor" style="display: none;">
+          <!-- Inline Find & Replace Toolbar -->
+          <div id="find-replace-bar" class="find-replace-bar" style="display: none;">
+            <div class="find-row">
+              <div class="input-with-count">
+                <input type="text" id="find-input" placeholder="Find..." spellcheck="false" autocomplete="off" />
+                <span id="find-count" class="find-count">0/0</span>
+              </div>
+              <button id="btn-find-prev" class="find-btn" title="Previous match (Shift+Enter)">▲</button>
+              <button id="btn-find-next" class="find-btn" title="Next match (Enter)">▼</button>
+              <button id="btn-close-find" class="find-btn close-btn" title="Close (Escape)">✕</button>
+            </div>
+            <div class="replace-row" id="replace-row">
+              <input type="text" id="replace-input" placeholder="Replace with..." spellcheck="false" autocomplete="off" />
+              <button id="btn-replace-one" class="find-btn text-btn">Replace</button>
+              <button id="btn-replace-all" class="find-btn text-btn">All</button>
+            </div>
+          </div>
+
+          <!-- Editor Surface -->
+          <div class="editor-surface">
+            <div id="line-gutter" class="line-gutter" aria-hidden="true"></div>
+            <textarea
+              id="markdown-textarea"
+              class="markdown-textarea"
+              placeholder="Start typing Markdown here..."
+              spellcheck="false"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+            ></textarea>
+          </div>
+
+          <!-- Subtle Editor Statusbar -->
+          <footer class="editor-statusbar">
+            <div class="status-left">
+              <span id="editor-cursor-pos">Ln 1, Col 1</span>
+            </div>
+            <div class="status-right">
+              <span id="editor-stats">0 words · 0 chars</span>
+            </div>
+          </footer>
+        </section>
+
+        <!-- Temporary Table of Contents Drawer -->
+        <aside id="toc-drawer" class="toc-drawer" aria-label="Table of Contents" aria-hidden="true">
+          <div class="toc-header">
+            <h3 class="toc-heading">Contents</h3>
+            <button id="btn-close-toc" class="tool-btn close-toc-btn" aria-label="Close Table of Contents">✕</button>
+          </div>
+          <nav id="toc-list" class="toc-list"></nav>
+        </aside>
+      </main>
+
+      <!-- Transient Status Message Toast -->
+      <div id="toast-notification" class="toast-notification" aria-live="polite"></div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+

@@ -1,0 +1,83 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "tsuzuri",
+  "version": "1.0.0",
+  "identifier": "io.github.ameyadeshpande.tsuzuri",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Tsuzuri",
+        "width": 1020,
+        "height": 760,
+        "minWidth": 320,
+        "minHeight": 400,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none';"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["deb"],
+    "category": "Utility",
+    "shortDescription": "Quiet, focused Markdown document reader and editor",
+    "longDescription": "A lightweight, offline, cross-platform Markdown document reader and editor supporting LaTeX math, Mermaid diagrams, and syntax highlighting.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "fileAssociations": [
+      {
+        "ext": ["md", "markdown", "mdown", "mkdn"],
+        "name": "Markdown Document",
+        "description": "Markdown Document",
+        "role": "Editor",
+        "mimeType": "text/markdown",
+        "rank": "Default",
+        "contentTypes": ["net.daringfireball.markdown"]
+      },
+      {
+        "ext": ["txt"],
+        "name": "Plain Text Document",
+        "description": "Plain Text Document",
+        "role": "Viewer",
+        "mimeType": "text/plain",
+        "rank": "Alternate",
+        "contentTypes": ["public.plain-text"]
+      }
+    ],
+    "linux": {
+      "deb": {
+        "depends": ["libwebkit2gtk-4.1-0 | libwebkit2gtk-4.0-37", "libgtk-3-0"],
+        "section": "editors",
+        "desktopTemplate": "desktopTemplate.desktop"
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "10.13"
+    },
+    "windows": {
+      "wix": {
+        "language": "en-US"
+      },
+      "nsis": {
+        "languages": ["English"]
+      }
+    },
+    "android": {
+      "debugApplicationIdSuffix": ".debug"
+    }
+  }
+}

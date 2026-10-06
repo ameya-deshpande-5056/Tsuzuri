@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+
+# Production build outputs
+dist/
+
+# Rust target artifacts
+src-tauri/target/
+
+# Logs and environment
+*.log
+.DS_Store

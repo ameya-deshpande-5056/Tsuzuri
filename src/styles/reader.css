@@ -1,0 +1,480 @@
+/* Typeset Reader View - Zero Horizontal Scroll Enforcement */
+
+.reader-pane {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background-color: var(--bg-canvas);
+}
+
+.reader-content {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 6rem 1.5rem;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  line-height: 1.7;
+  color: var(--text-primary);
+}
+
+/* Document Headings */
+.reader-content h1,
+.reader-content h2,
+.reader-content h3,
+.reader-content h4,
+.reader-content h5,
+.reader-content h6 {
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  line-height: 1.28;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.reader-content h1 {
+  font-size: 2rem;
+  margin-top: 1rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-default);
+  padding-bottom: 0.5rem;
+}
+
+.reader-content h2 {
+  font-size: 1.45rem;
+  border-bottom: 1px solid var(--border-default);
+  padding-bottom: 0.35rem;
+}
+
+.reader-content h3 { font-size: 1.2rem; }
+.reader-content h4 { font-size: 1.05rem; }
+.reader-content h5 { font-size: 0.95rem; }
+.reader-content h6 { font-size: 0.88rem; color: var(--text-secondary); }
+
+/* Paragraphs & Text Elements */
+.reader-content p {
+  margin-top: 0;
+  margin-bottom: 1.2rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.reader-content a {
+  color: var(--link-color);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+.reader-content a:hover {
+  filter: brightness(1.15);
+}
+
+.reader-content strong {
+  font-weight: 600;
+}
+
+.reader-content em {
+  font-style: italic;
+}
+
+.reader-content hr {
+  height: 1px;
+  border: none;
+  background-color: var(--border-default);
+  margin: 2.25rem 0;
+}
+
+/* Blockquotes */
+.reader-content blockquote {
+  margin: 1.4rem 0;
+  padding: 0.3rem 0 0.3rem 1.1rem;
+  border-left: 3px solid var(--blockquote-border);
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.reader-content blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+/* Lists */
+.reader-content ul,
+.reader-content ol {
+  margin: 0 0 1.2rem 0;
+  padding-left: 1.6rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.reader-content li {
+  margin-bottom: 0.35rem;
+}
+
+.reader-content li > ul,
+.reader-content li > ol {
+  margin-top: 0.35rem;
+  margin-bottom: 0;
+}
+
+/* Task Lists */
+.reader-content .task-list-item {
+  list-style-type: none;
+  margin-left: -1.2rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.reader-content .task-list-item input[type="checkbox"] {
+  margin: 0;
+  appearance: auto;
+  accent-color: var(--text-primary);
+}
+
+/* Inline Code & Code Blocks */
+.reader-content code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background-color: var(--code-bg);
+  border: 1px solid var(--code-border);
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.reader-content pre.hljs {
+  position: relative;
+  max-width: 100%;
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  background-color: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 4px;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.reader-content pre.hljs code {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  background: none;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.code-copy-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  background-color: var(--bg-surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+  user-select: none;
+}
+
+pre.hljs:hover .code-copy-btn,
+pre.hljs:focus-within .code-copy-btn {
+  opacity: 1;
+}
+
+.code-copy-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.code-copy-btn.copied {
+  opacity: 1;
+  color: var(--accent-primary);
+}
+
+/* Tables with Contained Responsive Scrolling */
+.table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 1.75rem 0;
+  border: 1px solid var(--table-border);
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.reader-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.reader-content th,
+.reader-content td {
+  padding: 0.65rem 0.95rem;
+  border-bottom: 1px solid var(--table-border);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.reader-content th {
+  font-weight: 600;
+  background-color: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+.reader-content tr:last-child td {
+  border-bottom: none;
+}
+
+.reader-content tr:nth-child(even) td {
+  background-color: var(--table-alt);
+}
+
+/* LaTeX Mathematics (KaTeX) */
+.katex-display-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  margin: 1.4rem 0;
+  padding: 0.5rem 0;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.katex-display {
+  max-width: 100%;
+  margin: 0 !important;
+}
+
+.katex {
+  font-size: 1.05em;
+  max-width: 100%;
+}
+
+.katex-error {
+  color: var(--danger-color);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background-color: var(--bg-subtle);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+  border: 1px solid var(--danger-color);
+}
+
+/* Mermaid Diagrams */
+.mermaid-diagram {
+  max-width: 100%;
+  margin: 1.75rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.mermaid-svg-wrapper {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.mermaid-svg-wrapper svg {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+
+.mermaid-fallback-box {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--danger-color);
+  border-radius: 3px;
+  text-align: left;
+}
+
+.mermaid-fallback-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+}
+
+.mermaid-fallback-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--danger-color);
+}
+
+.mermaid-fallback-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.mermaid-fallback-code {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  color: var(--text-secondary);
+}
+
+/* Images */
+.reader-content img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 1.5rem auto;
+  border-radius: 2px;
+}
+
+.broken-image-fallback {
+  display: inline-block;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  background-color: var(--bg-subtle);
+  border: 1px dashed var(--border-default);
+  border-radius: 3px;
+  margin: 0.5rem 0;
+}
+
+/* Footnotes */
+.reader-content .footnotes {
+  margin-top: 3.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-default);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.reader-content .footnotes ol {
+  padding-left: 1.25rem;
+}
+
+.reader-content .footnote-ref a {
+  font-size: 0.8em;
+  vertical-align: super;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.reader-content .footnote-backref {
+  text-decoration: none;
+  margin-left: 0.3rem;
+}
+
+/* Syntax Highlighting Styles (Highlight.js Minimal Theme) */
+.hljs-comment,
+.hljs-quote {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-subst {
+  color: #cf222e;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .hljs-keyword,
+[data-theme="dark"] .hljs-selector-tag,
+[data-theme="dark"] .hljs-subst {
+  color: #ff7b72;
+}
+
+.hljs-string,
+.hljs-title,
+.hljs-section,
+.hljs-attribute,
+.hljs-literal,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-addition {
+  color: #0a3069;
+}
+
+[data-theme="dark"] .hljs-string,
+[data-theme="dark"] .hljs-title,
+[data-theme="dark"] .hljs-section,
+[data-theme="dark"] .hljs-attribute,
+[data-theme="dark"] .hljs-literal,
+[data-theme="dark"] .hljs-template-tag,
+[data-theme="dark"] .hljs-template-variable,
+[data-theme="dark"] .hljs-type,
+[data-theme="dark"] .hljs-addition {
+  color: #a5d6ff;
+}
+
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet {
+  color: #0550ae;
+}
+
+[data-theme="dark"] .hljs-number,
+[data-theme="dark"] .hljs-symbol,
+[data-theme="dark"] .hljs-bullet {
+  color: #79c0ff;
+}
+
+.hljs-variable,
+.hljs-attr {
+  color: #953800;
+}
+
+[data-theme="dark"] .hljs-variable,
+[data-theme="dark"] .hljs-attr {
+  color: #ffa657;
+}
+
+/* Responsive Narrow Screen Padding */
+@media (max-width: 480px) {
+  .reader-content {
+    padding: 1.5rem 1rem 4rem 1rem;
+  }
+  .reader-content h1 {
+    font-size: 1.6rem;
+  }
+  .reader-content h2 {
+    font-size: 1.3rem;
+  }
+  .reader-content h3 {
+    font-size: 1.1rem;
+  }
+}
+

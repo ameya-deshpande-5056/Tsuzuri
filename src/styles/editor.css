@@ -1,0 +1,169 @@
+/* Raw Markdown Editor View */
+
+.editor-pane {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-surface);
+}
+
+/* Inline Find & Replace Bar */
+.find-replace-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-default);
+  z-index: 10;
+}
+
+.find-row,
+.replace-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.input-with-count {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  max-width: 320px;
+}
+
+.input-with-count input,
+.replace-row input {
+  width: 100%;
+  height: 28px;
+  padding: 0 0.5rem;
+  font-size: 0.8rem;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.input-with-count input {
+  padding-right: 3.5rem;
+}
+
+.input-with-count input:focus,
+.replace-row input:focus {
+  border-color: var(--border-focus);
+}
+
+.find-count {
+  position: absolute;
+  right: 0.5rem;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.find-btn {
+  height: 28px;
+  padding: 0 0.5rem;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+
+.find-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.find-btn.text-btn {
+  padding: 0 0.65rem;
+}
+
+.find-btn.close-btn {
+  font-size: 0.8rem;
+}
+
+/* Editor Surface & Line Gutter */
+.editor-surface {
+  position: relative;
+  display: flex;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.line-gutter {
+  width: 52px;
+  min-width: 52px;
+  height: 100%;
+  padding: 1rem 0.6rem 2rem 0;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 22px;
+  color: var(--text-faint);
+  user-select: none;
+  background-color: var(--bg-surface);
+  border-right: 1px solid var(--border-default);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.line-number {
+  height: 22px;
+}
+
+.markdown-textarea {
+  flex: 1;
+  height: 100%;
+  padding: 1rem 1.25rem 2rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 22px;
+  tab-size: 2;
+  color: var(--text-primary);
+  background-color: var(--bg-canvas);
+  border: none;
+  outline: none;
+  resize: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.markdown-textarea::selection {
+  background-color: rgba(37, 99, 235, 0.25);
+}
+
+[data-theme="dark"] .markdown-textarea::selection {
+  background-color: rgba(59, 130, 246, 0.35);
+}
+
+/* Editor Statusbar */
+.editor-statusbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 26px;
+  min-height: 26px;
+  padding: 0 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background-color: var(--bg-surface);
+  border-top: 1px solid var(--border-default);
+  user-select: none;
+}
+
