@@ -41,20 +41,26 @@ Only one view is active at any given moment. Switching between views is instant 
 
 ## Screenshots
 
-### Reader View (AMOLED Dark)
-*Typeset reading mode with high-contrast typography, zero visual noise, and AMOLED true black background.*
+### Reader View
+*Typeset reading mode optimized for typographic clarity, zero visual noise, and distraction-free immersion.*
 
-![Tsuzuri Reader View (AMOLED Dark)](docs/screenshots/reader-dark.png)
+| AMOLED Dark Mode | Light Mode |
+| :---: | :---: |
+| ![Reader Dark](docs/screenshots/reader-dark.png) | ![Reader Light](docs/screenshots/reader-light.png) |
 
-### Table of Contents Navigation Drawer
-*Slide-over outline drawer for instant document heading jumps without cluttering the screen.*
+### Table of Contents Navigation
+*Slide-over outline drawer for instant document heading navigation without cluttering the screen.*
 
-![Tsuzuri Table of Contents Drawer (AMOLED Dark)](docs/screenshots/reader-toc-dark.png)
+| AMOLED Dark Mode | Light Mode |
+| :---: | :---: |
+| ![TOC Dark](docs/screenshots/reader-toc-dark.png) | ![TOC Light](docs/screenshots/reader-toc-light.png) |
 
 ### Raw Markdown Editor
-*Monospace distraction-free editing surface with synchronized line numbering gutter and real-time word/character count.*
+*Monospace distraction-free editing surface with synchronized line numbering gutter and real-time document metrics.*
 
-![Tsuzuri Editor View (AMOLED Dark)](docs/screenshots/editor-dark.png)
+| AMOLED Dark Mode | Light Mode |
+| :---: | :---: |
+| ![Editor Dark](docs/screenshots/editor-dark.png) | ![Editor Light](docs/screenshots/editor-light.png) |
 
 ---
 
