@@ -20,6 +20,11 @@ function updateDocumentTheme(): boolean {
   document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
   document.documentElement.setAttribute("data-theme-mode", currentMode);
 
+  const metaThemeColor = document.getElementById("theme-color-meta");
+  if (metaThemeColor) {
+    metaThemeColor.setAttribute("content", isDark ? "#000000" : "#ffffff");
+  }
+
   if (changeCallback) {
     changeCallback(isDark);
   }

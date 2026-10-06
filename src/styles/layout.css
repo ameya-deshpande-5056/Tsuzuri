@@ -8,6 +8,8 @@
   height: 100dvh;
   overflow: hidden;
   background-color: var(--bg-canvas);
+  padding-left: var(--safe-area-left);
+  padding-right: var(--safe-area-right);
 }
 
 /* Minimalist App Header */
@@ -15,9 +17,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  box-sizing: content-box;
   height: 44px;
   min-height: 44px;
-  padding: 0 1rem;
+  padding-top: var(--safe-area-top);
+  padding-bottom: 0;
+  padding-left: 1rem;
+  padding-right: 1rem;
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-default);
   user-select: none;
@@ -178,7 +184,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.8rem 1rem;
+  box-sizing: content-box;
+  padding-top: calc(0.8rem + var(--safe-area-top));
+  padding-bottom: 0.8rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
   border-bottom: 1px solid var(--border-default);
 }
 
@@ -199,7 +209,7 @@
 .toc-list {
   flex: 1;
   overflow-y: auto;
-  padding: 0.75rem 0.5rem;
+  padding: 0.75rem 0.5rem calc(1rem + var(--safe-area-bottom)) 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -239,7 +249,7 @@
 /* Toast Notifications */
 .toast-notification {
   position: fixed;
-  bottom: 1.25rem;
+  bottom: calc(1.25rem + var(--safe-area-bottom));
   left: 50%;
   transform: translateX(-50%) translateY(100px);
   background-color: var(--text-primary);
@@ -262,7 +272,8 @@
 /* Responsive adjustments for mobile viewports */
 @media (max-width: 580px) {
   .app-header {
-    padding: 0 0.5rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
   .doc-title {
     max-width: 110px;

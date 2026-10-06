@@ -526,8 +526,32 @@ class TsuzuriApp {
   }
 }
 
+function initSafeAreaInsets(): void {
+  const updateFromBridge = () => {
+    const bridge = (window as any).TsuzuriSafeAreaBridge;
+    if (bridge && typeof bridge.getInsets === "function") {
+      try {
+        const insets = JSON.parse(bridge.getInsets());
+        if (insets && typeof insets.top === "number") {
+          document.documentElement.style.setProperty("--safe-area-top", `${insets.top}px`);
+          document.documentElement.style.setProperty("--safe-area-bottom", `${insets.bottom}px`);
+          document.documentElement.style.setProperty("--safe-area-left", `${insets.left}px`);
+          document.documentElement.style.setProperty("--safe-area-right", `${insets.right}px`);
+        }
+      } catch (err) {
+        console.warn("Error reading Android safe area insets:", err);
+      }
+    }
+  };
+
+  updateFromBridge();
+  window.addEventListener("resize", updateFromBridge);
+  window.addEventListener("orientationchange", updateFromBridge);
+}
+
 // Bootstrap
 window.addEventListener("DOMContentLoaded", () => {
+  initSafeAreaInsets();
   const app = new TsuzuriApp();
   app.init().catch((err) => console.error("Initialization error:", err));
 });

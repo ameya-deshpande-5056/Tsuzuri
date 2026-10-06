@@ -17,7 +17,7 @@
   width: 100%;
   max-width: 760px;
   margin: 0 auto;
-  padding: 3rem 1.5rem 6rem 1.5rem;
+  padding: 3rem 1.5rem calc(6rem + var(--safe-area-bottom)) 1.5rem;
   box-sizing: border-box;
   overflow-wrap: break-word;
   word-break: break-word;
@@ -465,7 +465,7 @@ pre.hljs:focus-within .code-copy-btn {
 /* Responsive Narrow Screen Padding */
 @media (max-width: 480px) {
   .reader-content {
-    padding: 1.5rem 1rem 4rem 1rem;
+    padding: 1.5rem 1rem calc(4rem + var(--safe-area-bottom)) 1rem;
   }
   .reader-content h1 {
     font-size: 1.6rem;

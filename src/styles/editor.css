@@ -106,7 +106,7 @@
   width: 52px;
   min-width: 52px;
   height: 100%;
-  padding: 1rem 0.6rem 2rem 0;
+  padding: 1rem 0.6rem calc(4rem + var(--safe-area-bottom)) 0;
   text-align: right;
   font-family: var(--font-mono);
   font-size: 0.85rem;
@@ -126,7 +126,7 @@
 .markdown-textarea {
   flex: 1;
   height: 100%;
-  padding: 1rem 1.25rem 2rem 1.25rem;
+  padding: 1rem 1.25rem calc(4rem + var(--safe-area-bottom)) 1.25rem;
   font-family: var(--font-mono);
   font-size: 0.88rem;
   line-height: 22px;
@@ -156,9 +156,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-sizing: content-box;
   height: 26px;
   min-height: 26px;
-  padding: 0 1rem;
+  padding-top: 0;
+  padding-bottom: var(--safe-area-bottom);
+  padding-left: 1rem;
+  padding-right: 1rem;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   color: var(--text-muted);
