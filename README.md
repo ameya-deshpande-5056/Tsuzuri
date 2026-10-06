@@ -212,65 +212,191 @@ npm test
 
 ---
 
+---
+
 ## Building Production Binaries
 
-### Linux (`.deb` and binary)
+### 1. Linux (`.deb` and native binary)
 ```bash
-# Build production bundle
+# Build production Debian package and standalone binary
 npm run tauri build
 ```
 Artifacts will be located at:
-- Executable: `src-tauri/target/release/tsuzuri`
+- Standalone Executable: `src-tauri/target/release/tsuzuri`
 - Debian package: `src-tauri/target/release/bundle/deb/tsuzuri_1.0.0_amd64.deb`
 
-### Windows
+To install locally on Debian/Ubuntu/Mint/Pop!_OS:
 ```bash
-# Run on Windows host or via Windows CI runner
+sudo dpkg -i src-tauri/target/release/bundle/deb/tsuzuri_1.0.0_amd64.deb
+```
+
+---
+
+### 2. Windows (`.msi` and NSIS `.exe` installer)
+Run on a Windows host (or automatically via GitHub Actions):
+```bash
+# 1. Install Windows target
+rustup target add x86_64-pc-windows-msvc
+
+# 2. Build production installers
 npm run tauri build -- --target x86_64-pc-windows-msvc
 ```
+Artifacts will be located at:
+- NSIS Setup Installer: `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/tsuzuri_1.0.0_x64-setup.exe`
+- WiX MSI Package: `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/tsuzuri_1.0.0_x64_en-US.msi`
 
-### macOS
+---
+
+### 3. macOS (`.dmg` and `.app` bundle)
+Run on a macOS host (or automatically via GitHub Actions):
 ```bash
-# Run on macOS host or via macOS CI runner
+# 1. Install Apple Darwin targets
+rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+# 2. Build universal binary and disk image (.dmg)
 npm run tauri build -- --target universal-apple-darwin
 ```
+Artifacts will be located at:
+- Apple Disk Image: `src-tauri/target/universal-apple-darwin/release/bundle/dmg/tsuzuri_1.0.0_universal.dmg`
+- macOS Application Bundle: `src-tauri/target/universal-apple-darwin/release/bundle/macos/tsuzuri.app`
 
-### Android (APK & AAB)
+---
+
+### 4. Android (`.apk` and `.aab`)
+
+#### Prerequisites
+1. **Android SDK & NDK**: Installed via Android Studio (e.g. at `~/Android/Sdk`).
+2. **Java JDK**: JDK 17 or JDK 21 (e.g. `/opt/android-studio/jbr` or OpenJDK).
+3. **Android Rust toolchains**:
+   ```bash
+   rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+   ```
+
+#### Build Commands
 ```bash
-# 1. Install Android Rust toolchains
-rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
-
-# 2. Initialize the Android Studio project (if not already done)
+# 1. Initialize Android project (already generated under src-tauri/gen/android)
 npx tauri android init
 
-# 3. Build the APK (Debug or Release)
+# 2. Build Debug APK (instantly runnable on test devices):
 npx tauri android build --apk --debug
-# or for release:
+
+# 3. Build Release APK (optimized, stripped binary):
 npx tauri android build --apk
 
-# 4. Or open in Android Studio:
+# 4. Build Android App Bundle (.aab) for Google Play Store:
+npx tauri android build --aab
+```
+
+#### Output Locations
+- Debug APK: `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
+- Release APK: `src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk`
+- Release AAB: `src-tauri/gen/android/app/build/outputs/bundle/universalRelease/app-universal-release.aab`
+
+#### Signing the APK
+To sign your release APK with your keystore:
+```bash
+# Generate a keystore if you don't have one:
+keytool -genkey -v -keystore my-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-alias
+
+# Sign the APK with apksigner (from Android SDK build-tools):
+$ANDROID_HOME/build-tools/36.0.0/apksigner sign --ks my-release-key.jks --ks-key-alias my-alias \
+  src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk
+```
+
+#### Android Studio GUI
+You can also open the project directly in Android Studio:
+```bash
 npx tauri android open
 ```
-Generated APK will be located at:
-- `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
+Then use **Build > Build Bundle(s) / APK(s) > Build APK(s)**.
 
-### iOS (IPA & App Bundle)
-> **Note**: Building for iOS requires a **macOS** system with **Xcode** installed, as mandated by Apple's build tools and codesigning requirements.
+---
+
+### 5. iOS (`.ipa` and `.app`)
+
+> **Apple Platform Requirement**: Compiling iOS applications and generating `.ipa` archives requires a **macOS** environment with **Xcode** installed, as mandated by Apple's codesigning, SDK, and `xcodebuild` requirements.
+
+#### Prerequisites (on macOS)
+1. **Xcode**: Installed from Mac App Store, plus command-line tools:
+   ```bash
+   xcode-select --install
+   ```
+2. **iOS Rust targets**:
+   ```bash
+   rustup target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim
+   ```
+
+#### Build Steps
 ```bash
-# 1. Install iOS Rust targets (on macOS)
-rustup target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim
-
-# 2. Initialize the Xcode project
+# 1. Initialize Xcode project under src-tauri/gen/apple/
 npx tauri ios init
 
-# 3. Build iOS application
+# 2. Build iOS application binary:
 npx tauri ios build
-
-# 4. Open in Xcode for archiving and IPA signing:
-open src-tauri/gen/apple/tsuzuri.xcodeproj
-# Inside Xcode: Product -> Archive -> Distribute App -> Export IPA
 ```
-*Tip: If you do not have a physical Mac, you can trigger the included GitHub Actions workflow (`.github/workflows/build-mobile.yml`) which automatically builds and exports both Android APK and iOS packages on GitHub's cloud runners.*
+
+#### Generating Signed `.ipa` via Xcode GUI (Recommended)
+```bash
+open src-tauri/gen/apple/tsuzuri.xcodeproj
+```
+1. In Xcode, select the `tsuzuri` target. Under **Signing & Capabilities**, select your **Team** (free personal Apple ID or paid Apple Developer Program).
+2. Set the destination device to **Any iOS Device (arm64)**.
+3. Select **Product > Archive**.
+4. In the Organizer window, click **Distribute App**.
+5. Select **App Store Connect**, **Ad Hoc**, or **Development** / **Custom**.
+6. Follow the wizard to export the `.ipa` package.
+
+#### Creating Unsigned `.ipa` for Sideloading (AltStore / Sideloadly)
+```bash
+cd src-tauri/gen/apple/build/arm64
+mkdir Payload
+cp -r tsuzuri.app Payload/
+zip -r tsuzuri.ipa Payload
+```
+
+---
+
+## Automated Multi-Platform GitHub Releases Workflow
+
+Tsuzuri includes automated GitHub Actions workflows to build and publish release binaries for all 5 platforms directly to the **Releases** section of your GitHub repository.
+
+### Workflow Files
+1. [`.github/workflows/release.yml`](.github/workflows/release.yml):
+   - **Linux**: Compiles on `ubuntu-22.04` and publishes `.deb`.
+   - **Windows**: Compiles on `windows-latest` and publishes `.exe` (NSIS) and `.msi`.
+   - **macOS**: Compiles on `macos-latest` and publishes `.dmg` (Universal).
+   - **Android**: Compiles on `ubuntu-latest` with NDK and publishes `tsuzuri-android.apk`.
+   - **iOS**: Compiles on `macos-14` with Xcode and publishes `tsuzuri-ios-unsigned.ipa`.
+2. [`.github/workflows/build-mobile.yml`](.github/workflows/build-mobile.yml):
+   - CI build on pull requests and pushes that validates Android and iOS compilation.
+
+### How to Trigger an Automated Release
+
+To automatically build and attach all platform binaries to a GitHub Release:
+
+```bash
+# 1. Commit and push your changes
+git add .
+git commit -m "chore: prepare release v1.0.0"
+git push origin master
+
+# 2. Create and push a version tag
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Once pushed, GitHub Actions will:
+1. Spin up Ubuntu, Windows, and macOS cloud runners concurrently.
+2. Compile and package the native binaries for all five platforms.
+3. Create a **GitHub Release** tagged `v1.0.0` with the downloadable files:
+   - `tsuzuri_1.0.0_amd64.deb` (Linux)
+   - `tsuzuri_1.0.0_x64-setup.exe` (Windows)
+   - `tsuzuri_1.0.0_universal.dmg` (macOS)
+   - `tsuzuri-android.apk` (Android)
+   - `tsuzuri-ios-unsigned.ipa` (iOS)
+
+You can also trigger a release manually at any time by going to **Actions > Release > Run workflow** on GitHub.
+
 
 ---
 

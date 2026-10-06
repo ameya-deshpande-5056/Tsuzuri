@@ -27,7 +27,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["deb"],
+    "targets": ["deb", "nsis", "msi", "app", "dmg"],
     "category": "Utility",
     "shortDescription": "Quiet, focused Markdown document reader and editor",
     "longDescription": "A lightweight, offline, cross-platform Markdown document reader and editor supporting LaTeX math, Mermaid diagrams, and syntax highlighting.",
