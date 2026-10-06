@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/icon.png" width="108" height="108" alt="Tsuzuri Logo" />
+</p>
+
 # Tsuzuri (綴り)
 
 A lightweight, completely offline, cross-platform Markdown document reader and editor built with Tauri 2, Rust, and TypeScript.
@@ -37,20 +41,20 @@ Only one view is active at any given moment. Switching between views is instant 
 
 ## Screenshots
 
-<!-- Add application screenshots below -->
-```
-[ Reader View Screenshot ]
-(Screenshots can be added here: docs/screenshots/reader-light.png and docs/screenshots/reader-dark-amoled.png)
+### Reader View (AMOLED Dark)
+*Typeset reading mode with high-contrast typography, zero visual noise, and AMOLED true black background.*
 
-[ Editor View Screenshot ]
-(Screenshots can be added here: docs/screenshots/editor.png)
-```
+![Tsuzuri Reader View (AMOLED Dark)](docs/screenshots/reader-dark.png)
 
-To capture and add screenshots:
-1. Launch Tsuzuri with `test_document.md`.
-2. Capture the Reader view in Light and AMOLED Dark modes.
-3. Capture the Editor view with the Find & Replace bar open.
-4. Place PNG files in `docs/screenshots/` and update the markdown links.
+### Table of Contents Navigation Drawer
+*Slide-over outline drawer for instant document heading jumps without cluttering the screen.*
+
+![Tsuzuri Table of Contents Drawer (AMOLED Dark)](docs/screenshots/reader-toc-dark.png)
+
+### Raw Markdown Editor
+*Monospace distraction-free editing surface with synchronized line numbering gutter and real-time word/character count.*
+
+![Tsuzuri Editor View (AMOLED Dark)](docs/screenshots/editor-dark.png)
 
 ---
 
@@ -434,6 +438,9 @@ tsuzuri/
 ├── test_document.md             # Comprehensive manual and automated test document
 ├── sample_image.png             # Sample local asset for relative image tests
 ├── LICENSE                      # GNU General Public License v3.0
+├── public/                      # Static web assets & application icons
+├── docs/
+│   └── screenshots/             # Dark mode desktop application screenshots
 ├── src/
 │   ├── main.ts                  # App lifecycle, routing, keyboard shortcuts, drag-and-drop
 │   ├── state.ts                 # Document state, view mode, theme state
