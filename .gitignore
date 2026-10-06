@@ -10,3 +10,4 @@ src-tauri/target/
 # Logs and environment
 *.log
 .DS_Store
+

@@ -1,0 +1,105 @@
+name: Build Mobile (Android APK & iOS IPA)
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: |
+          sdkmanager --install "ndk;28.2.13676358" "build-tools;36.0.0" "platforms;android-37"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Initialize Android Target (if needed)
+        run: npx tauri android init --ci --skip-targets-install
+
+      - name: Build Android APK
+        run: npx tauri android build --apk --debug
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/28.2.13676358
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tsuzuri-android-apk
+          path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+
+  build-ios:
+    name: Build iOS IPA
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Initialize iOS Target
+        run: npx tauri ios init --ci --skip-targets-install
+
+      - name: Build iOS Application
+        run: |
+          # Build simulator / unsigned device payload
+          npx tauri ios build --debug
+          
+          # Package Payload into unsigned IPA for ad-hoc / AltStore / Sideloadly testing
+          cd src-tauri/gen/apple/build/arm64
+          if [ -d "tsuzuri.app" ]; then
+            mkdir -p Payload
+            cp -r tsuzuri.app Payload/
+            zip -r ../../../../tsuzuri-unsigned.ipa Payload/
+          fi
+
+      - name: Upload iOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tsuzuri-ios-payload
+          path: |
+            tsuzuri-unsigned.ipa
+            src-tauri/gen/apple/build/**/*.app

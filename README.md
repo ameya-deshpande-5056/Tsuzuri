@@ -235,6 +235,43 @@ npm run tauri build -- --target x86_64-pc-windows-msvc
 npm run tauri build -- --target universal-apple-darwin
 ```
 
+### Android (APK & AAB)
+```bash
+# 1. Install Android Rust toolchains
+rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+
+# 2. Initialize the Android Studio project (if not already done)
+npx tauri android init
+
+# 3. Build the APK (Debug or Release)
+npx tauri android build --apk --debug
+# or for release:
+npx tauri android build --apk
+
+# 4. Or open in Android Studio:
+npx tauri android open
+```
+Generated APK will be located at:
+- `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
+
+### iOS (IPA & App Bundle)
+> **Note**: Building for iOS requires a **macOS** system with **Xcode** installed, as mandated by Apple's build tools and codesigning requirements.
+```bash
+# 1. Install iOS Rust targets (on macOS)
+rustup target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim
+
+# 2. Initialize the Xcode project
+npx tauri ios init
+
+# 3. Build iOS application
+npx tauri ios build
+
+# 4. Open in Xcode for archiving and IPA signing:
+open src-tauri/gen/apple/tsuzuri.xcodeproj
+# Inside Xcode: Product -> Archive -> Distribute App -> Export IPA
+```
+*Tip: If you do not have a physical Mac, you can trigger the included GitHub Actions workflow (`.github/workflows/build-mobile.yml`) which automatically builds and exports both Android APK and iOS packages on GitHub's cloud runners.*
+
 ---
 
 ## Testing & Quality Verification
@@ -361,3 +398,4 @@ tsuzuri/
 ## License
 
 Tsuzuri is licensed under the [GNU General Public License v3.0](LICENSE).
+
