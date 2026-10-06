@@ -2,5 +2,15 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-  tsuzuri_lib::run();
+    #[cfg(target_os = "linux")]
+    {
+        // Prevent WebKitGTK DMABUF renderer crashes on Linux GPU drivers
+        if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+            unsafe {
+                std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+            }
+        }
+    }
+
+    tsuzuri_lib::run();
 }

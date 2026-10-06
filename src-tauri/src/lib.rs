@@ -92,18 +92,22 @@ fn read_local_asset(base_dir: String, relative_path: String) -> Result<String, S
 }
 
 #[tauri::command]
-fn pick_open_file(app: AppHandle) -> Result<Option<String>, String> {
+async fn pick_open_file(app: AppHandle) -> Result<Option<String>, String> {
     use tauri_plugin_dialog::DialogExt;
-    let file = app.dialog().file()
+    let (tx, mut rx) = tauri::async_runtime::channel(1);
+    app.dialog().file()
         .add_filter("Markdown Files", &["md", "markdown", "mdown", "mkdn", "txt"])
         .add_filter("All Files", &["*"])
-        .blocking_pick_file();
+        .pick_file(move |file| {
+            let _ = tx.blocking_send(file);
+        });
 
+    let file = rx.recv().await.flatten();
     Ok(file.map(|p| p.to_string()))
 }
 
 #[tauri::command]
-fn pick_save_file(app: AppHandle, default_name: Option<String>) -> Result<Option<String>, String> {
+async fn pick_save_file(app: AppHandle, default_name: Option<String>) -> Result<Option<String>, String> {
     use tauri_plugin_dialog::DialogExt;
     let mut builder = app.dialog().file()
         .add_filter("Markdown Files", &["md", "markdown", "mdown", "mkdn"])
@@ -113,7 +117,12 @@ fn pick_save_file(app: AppHandle, default_name: Option<String>) -> Result<Option
         builder = builder.set_file_name(&name);
     }
 
-    let file = builder.blocking_save_file();
+    let (tx, mut rx) = tauri::async_runtime::channel(1);
+    builder.save_file(move |file| {
+        let _ = tx.blocking_send(file);
+    });
+
+    let file = rx.recv().await.flatten();
     Ok(file.map(|p| p.to_string()))
 }
 
