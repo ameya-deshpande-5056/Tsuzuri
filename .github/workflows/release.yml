@@ -114,7 +114,7 @@ jobs:
           VERSION="${RAW_TAG#v}"
           mkdir -p release-artifacts
           find src-tauri/gen/android/app/build/outputs/apk -name "*.apk" | head -n 1 | while read -r apk; do
-            cp "$apk" "release-artifacts/tsuzuri_${VERSION}_android.apk"
+            cp "$apk" "release-artifacts/tsuzuri_${VERSION}.apk"
           done
 
       - name: Upload APK to GitHub Release
@@ -161,7 +161,7 @@ jobs:
           if [ -d "$APP_DIR" ]; then
             cp -r "$APP_DIR" release-artifacts/Payload/
             cd release-artifacts
-            zip -r "tsuzuri_${VERSION}_ios.ipa" Payload
+            zip -r "tsuzuri_${VERSION}.ipa" Payload
           else
             echo "Warning: .app directory not found in build outputs"
           fi
