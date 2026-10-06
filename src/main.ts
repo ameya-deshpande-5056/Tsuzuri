@@ -89,6 +89,9 @@ class TsuzuriApp {
     // Setup interactive behaviors (links, copy buttons)
     setupInteractiveBehaviors(this.readerContent);
 
+    // Setup listener for Android / external document open intents
+    this.setupExternalDocumentListener();
+
     // Check if launched with a file argument
     await this.checkLaunchFile();
   }
@@ -476,9 +479,31 @@ class TsuzuriApp {
   }
 
   public async handleSaveFile(saveAs: boolean): Promise<void> {
+    const bridge = (window as any).TsuzuriBridge;
+    if (
+      !saveAs &&
+      this.state.doc.path &&
+      this.state.doc.path.startsWith("content://") &&
+      bridge &&
+      typeof bridge.saveDocument === "function"
+    ) {
+      try {
+        const ok = bridge.saveDocument(this.state.doc.path, this.state.doc.content);
+        if (ok) {
+          this.state.doc.savedSnapshot = this.state.doc.content;
+          this.state.doc.isDirty = false;
+          this.updateTitleDisplay();
+          this.showToast(`Saved ${this.state.doc.fileName}`);
+          return;
+        }
+      } catch (err) {
+        console.warn("Android bridge direct save failed:", err);
+      }
+    }
+
     let targetPath = this.state.doc.path;
 
-    if (!targetPath || saveAs) {
+    if (!targetPath || saveAs || targetPath.startsWith("content://")) {
       try {
         const picked = await pickSaveFile(this.state.doc.fileName);
         if (!picked) return; // User cancelled
@@ -507,6 +532,54 @@ class TsuzuriApp {
       console.error("Save error:", err);
       this.showToast(`Save failed: ${err}`);
     }
+  }
+
+  private setupExternalDocumentListener(): void {
+    // Global hook callable by native Android bridge at any time (onCreate or onNewIntent)
+    (window as any).__tsuzuri_open_document = (payload: { fileName: string; content: string; uri?: string }) => {
+      this.loadExternalDocument(payload);
+    };
+
+    // If an intent document arrived before JS initialization finished
+    if ((window as any).__tsuzuri_pending_doc) {
+      this.loadExternalDocument((window as any).__tsuzuri_pending_doc);
+      (window as any).__tsuzuri_pending_doc = null;
+    }
+
+    // Synchronously check native bridge for pending document
+    const bridge = (window as any).TsuzuriBridge;
+    if (bridge && typeof bridge.getPendingDocument === "function") {
+      try {
+        const raw = bridge.getPendingDocument();
+        if (raw) {
+          const payload = JSON.parse(raw);
+          if (payload && payload.content !== undefined) {
+            this.loadExternalDocument(payload);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to check pending document from bridge:", err);
+      }
+    }
+  }
+
+  private async loadExternalDocument(payload: { fileName: string; content: string; uri?: string }): Promise<void> {
+    const { fileName, content, uri } = payload;
+    this.state.doc.fileName = fileName || "document.md";
+    this.state.doc.content = content || "";
+    this.state.doc.path = uri || fileName;
+    this.state.doc.directory = null;
+    this.state.doc.savedSnapshot = this.state.doc.content;
+    this.state.doc.isDirty = false;
+
+    this.editor.setValue(this.state.doc.content, true);
+    this.updateEditorStats(this.state.doc.content);
+    this.updateTitleDisplay();
+
+    // Start in Reader view
+    await this.switchView("reader");
+    await this.renderCurrentDocument();
+    this.showToast(`Opened ${this.state.doc.fileName}`);
   }
 
   private async checkLaunchFile(): Promise<void> {
