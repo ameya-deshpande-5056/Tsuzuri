@@ -462,19 +462,34 @@ pre.hljs:focus-within .code-copy-btn {
   color: #ffa657;
 }
 
-/* Responsive Narrow Screen Padding */
-@media (max-width: 480px) {
+/* Responsive Narrow Screen Typography & Padding */
+@media (max-width: 600px) {
   .reader-content {
-    padding: 1.5rem 1rem calc(4rem + var(--safe-area-bottom)) 1rem;
+    padding: 1.25rem 0.85rem calc(4rem + var(--safe-area-bottom)) 0.85rem;
   }
   .reader-content h1 {
     font-size: 1.6rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.9rem;
   }
   .reader-content h2 {
     font-size: 1.3rem;
+    margin-top: 1.4rem;
   }
   .reader-content h3 {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+  }
+  .reader-content blockquote {
+    margin-left: 0;
+    margin-right: 0;
+    padding: 0.4rem 0.75rem;
+  }
+  .reader-content pre {
+    padding: 0.65rem;
+    border-radius: 4px;
+  }
+  .reader-content pre code {
+    font-size: 13.5px;
   }
 }
 

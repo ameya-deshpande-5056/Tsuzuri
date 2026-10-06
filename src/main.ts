@@ -35,7 +35,6 @@ class TsuzuriApp {
   private btnOpen!: HTMLButtonElement;
   private btnSave!: HTMLButtonElement;
   private btnTheme!: HTMLButtonElement;
-  private themeIcon!: HTMLElement;
   private themeLabel!: HTMLElement;
   private docTitleEl!: HTMLElement;
   private dirtyIndicatorEl!: HTMLElement;
@@ -43,6 +42,16 @@ class TsuzuriApp {
   private tocList!: HTMLElement;
   private btnCloseToc!: HTMLButtonElement;
   private toastEl!: HTMLElement;
+
+  // Mobile Sheet & Backdrop Elements
+  private btnMore!: HTMLButtonElement;
+  private mobileSheet!: HTMLElement;
+  private btnCloseSheet!: HTMLButtonElement;
+  private drawerBackdrop!: HTMLElement;
+  private sheetBtnOpen!: HTMLButtonElement;
+  private sheetBtnSave!: HTMLButtonElement;
+  private sheetBtnFind!: HTMLButtonElement;
+  private isMobileSheetOpen: boolean = false;
 
   // Find & Replace Elements
   private findReplaceBar!: HTMLElement;
@@ -96,7 +105,6 @@ class TsuzuriApp {
     this.btnOpen = document.getElementById("btn-open") as HTMLButtonElement;
     this.btnSave = document.getElementById("btn-save") as HTMLButtonElement;
     this.btnTheme = document.getElementById("btn-theme") as HTMLButtonElement;
-    this.themeIcon = document.getElementById("theme-icon") as HTMLElement;
     this.themeLabel = document.getElementById("theme-label") as HTMLElement;
     this.docTitleEl = document.getElementById("doc-title") as HTMLElement;
     this.dirtyIndicatorEl = document.getElementById("dirty-indicator") as HTMLElement;
@@ -104,6 +112,14 @@ class TsuzuriApp {
     this.tocList = document.getElementById("toc-list") as HTMLElement;
     this.btnCloseToc = document.getElementById("btn-close-toc") as HTMLButtonElement;
     this.toastEl = document.getElementById("toast-notification") as HTMLElement;
+
+    this.btnMore = document.getElementById("btn-more") as HTMLButtonElement;
+    this.mobileSheet = document.getElementById("mobile-sheet") as HTMLElement;
+    this.btnCloseSheet = document.getElementById("btn-close-sheet") as HTMLButtonElement;
+    this.drawerBackdrop = document.getElementById("drawer-backdrop") as HTMLElement;
+    this.sheetBtnOpen = document.getElementById("sheet-btn-open") as HTMLButtonElement;
+    this.sheetBtnSave = document.getElementById("sheet-btn-save") as HTMLButtonElement;
+    this.sheetBtnFind = document.getElementById("sheet-btn-find") as HTMLButtonElement;
 
     this.findReplaceBar = document.getElementById("find-replace-bar") as HTMLElement;
     this.replaceRow = document.getElementById("replace-row") as HTMLElement;
@@ -132,16 +148,17 @@ class TsuzuriApp {
 
   private updateThemeButtonDisplay(): void {
     const current = getTheme();
-    if (current === "dark") {
-      this.themeIcon.textContent = "●";
-      this.themeLabel.textContent = "Dark";
-    } else if (current === "light") {
-      this.themeIcon.textContent = "○";
-      this.themeLabel.textContent = "Light";
-    } else {
-      this.themeIcon.textContent = "◐";
-      this.themeLabel.textContent = "System";
+    if (this.themeLabel) {
+      this.themeLabel.textContent = current.charAt(0).toUpperCase() + current.slice(1);
     }
+    document.querySelectorAll<HTMLButtonElement>(".sheet-theme-btn").forEach((btn) => {
+      const mode = btn.getAttribute("data-theme-mode");
+      if (mode === current) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
   }
 
   private cycleTheme(): void {
@@ -154,6 +171,22 @@ class TsuzuriApp {
     setTheme(next);
     this.state.themeMode = next;
     this.updateThemeButtonDisplay();
+  }
+
+  private openMobileSheet(): void {
+    this.isMobileSheetOpen = true;
+    this.mobileSheet.classList.add("open");
+    this.mobileSheet.setAttribute("aria-hidden", "false");
+    this.drawerBackdrop.classList.add("active");
+  }
+
+  private closeMobileSheet(): void {
+    this.isMobileSheetOpen = false;
+    this.mobileSheet.classList.remove("open");
+    this.mobileSheet.setAttribute("aria-hidden", "true");
+    if (!this.state.tocOpen) {
+      this.drawerBackdrop.classList.remove("active");
+    }
   }
 
   private initEditor(): void {
@@ -185,6 +218,11 @@ class TsuzuriApp {
       this.readerView,
       (isOpen) => {
         this.state.tocOpen = isOpen;
+        if (isOpen) {
+          this.drawerBackdrop.classList.add("active");
+        } else if (!this.isMobileSheetOpen) {
+          this.drawerBackdrop.classList.remove("active");
+        }
       }
     );
   }
@@ -237,6 +275,43 @@ class TsuzuriApp {
     this.btnCloseFind.addEventListener("click", () => this.closeFindBar());
     this.btnReplaceOne.addEventListener("click", () => this.replaceOne());
     this.btnReplaceAll.addEventListener("click", () => this.replaceAll());
+
+    // Mobile Actions Sheet & Backdrop
+    this.btnMore.addEventListener("click", () => this.openMobileSheet());
+    this.btnCloseSheet.addEventListener("click", () => this.closeMobileSheet());
+    this.drawerBackdrop.addEventListener("click", () => {
+      this.closeMobileSheet();
+      this.nav.closeToc();
+    });
+
+    this.sheetBtnOpen.addEventListener("click", () => {
+      this.closeMobileSheet();
+      this.handleOpenFile();
+    });
+
+    this.sheetBtnSave.addEventListener("click", () => {
+      this.closeMobileSheet();
+      this.handleSaveFile(false);
+    });
+
+    this.sheetBtnFind.addEventListener("click", () => {
+      this.closeMobileSheet();
+      if (this.state.activeView !== "editor") {
+        this.switchView("editor");
+      }
+      this.openFindBar(false);
+    });
+
+    document.querySelectorAll<HTMLButtonElement>(".sheet-theme-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const mode = btn.getAttribute("data-theme-mode") as ThemeMode;
+        if (mode) {
+          setTheme(mode);
+          this.state.themeMode = mode;
+          this.updateThemeButtonDisplay();
+        }
+      });
+    });
   }
 
   private bindShortcuts(): void {
@@ -266,7 +341,9 @@ class TsuzuriApp {
           // Native or custom editor undo handled
         }
       } else if (e.key === "Escape") {
-        if (this.state.findOpen) {
+        if (this.isMobileSheetOpen) {
+          this.closeMobileSheet();
+        } else if (this.state.findOpen) {
           this.closeFindBar();
         } else if (this.state.tocOpen) {
           this.nav.closeToc();
@@ -448,6 +525,14 @@ class TsuzuriApp {
     this.docTitleEl.textContent = this.state.doc.fileName;
     this.dirtyIndicatorEl.style.display = this.state.doc.isDirty ? "inline" : "none";
     document.title = `${this.state.doc.fileName}${dirtySuffix} — Tsuzuri`;
+
+    if (this.state.doc.isDirty) {
+      this.btnSave.classList.add("dirty");
+      this.sheetBtnSave.classList.add("dirty");
+    } else {
+      this.btnSave.classList.remove("dirty");
+      this.sheetBtnSave.classList.remove("dirty");
+    }
   }
 
   private updateEditorStats(content: string): void {

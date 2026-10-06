@@ -269,20 +269,244 @@
   opacity: 1;
 }
 
+/* Drawer & Bottom Sheet Backdrop */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 25;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.drawer-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Mobile Actions Bottom Sheet */
+.mobile-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--bg-surface);
+  border-top: 1px solid var(--border-default);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  box-shadow: 0 -4px 28px rgba(0, 0, 0, 0.25);
+  z-index: 35;
+  transform: translateY(105%);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  padding-bottom: calc(1rem + var(--safe-area-bottom));
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.mobile-sheet.open {
+  transform: translateY(0);
+}
+
+.sheet-handle-bar {
+  display: flex;
+  justify-content: center;
+  padding: 0.65rem 0 0.25rem 0;
+}
+
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background-color: var(--border-strong);
+}
+
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1.25rem 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.sheet-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sheet-body {
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sheet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.sheet-action-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  height: 48px;
+  padding: 0 1rem;
+  border-radius: 8px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.sheet-action-item:active {
+  background-color: var(--bg-hover);
+  transform: scale(0.98);
+}
+
+.sheet-section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.sheet-theme-switcher {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.sheet-theme-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 52px;
+  border-radius: 8px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sheet-theme-btn.active {
+  background-color: var(--bg-surface);
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.sheet-theme-btn:active {
+  transform: scale(0.96);
+}
+
+/* Visibility Utilities */
+.desktop-only {
+  display: inline-flex !important;
+}
+
+.mobile-only {
+  display: none !important;
+}
+
+.tool-btn.dirty {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  font-weight: 600;
+}
+
 /* Responsive adjustments for mobile viewports */
-@media (max-width: 580px) {
+@media (max-width: 680px) {
+  .desktop-only {
+    display: none !important;
+  }
+  .mobile-only {
+    display: inline-flex !important;
+  }
   .app-header {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    padding-left: calc(0.5rem + var(--safe-area-left));
+    padding-right: calc(0.5rem + var(--safe-area-right));
   }
-  .doc-title {
-    max-width: 110px;
-  }
-  .btn-label {
+  .app-name {
     display: none;
   }
+  .doc-title {
+    max-width: 105px;
+    font-size: 0.8rem;
+  }
+  .header-left {
+    gap: 0.35rem;
+  }
+  .header-right {
+    gap: 0.25rem;
+  }
+  .view-switcher {
+    padding: 1px;
+    gap: 1px;
+  }
+  .view-btn {
+    padding: 0.2rem 0.55rem;
+    font-size: 0.74rem;
+  }
   .tool-btn {
-    padding: 0.35rem;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 6px;
+    background-color: var(--bg-subtle);
+    border: 1px solid var(--border-default);
+    justify-content: center;
+  }
+  .tool-btn.dirty {
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    background-color: var(--bg-hover);
+  }
+  .btn-label {
+    display: none !important;
+  }
+  .toc-drawer {
+    width: 85vw;
+    max-width: 320px;
+    border-top-left-radius: 14px;
+    border-bottom-left-radius: 14px;
+  }
+  .toc-item {
+    min-height: 40px;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .doc-title {
+    max-width: 75px;
+    font-size: 0.75rem;
+  }
+  .view-btn {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.7rem;
+  }
+  .tool-btn {
+    width: 32px;
+    height: 32px;
   }
 }
 
