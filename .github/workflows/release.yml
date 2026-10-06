@@ -103,8 +103,8 @@ jobs:
       - name: Initialize Android Target
         run: npx tauri android init --ci --skip-targets-install
 
-      - name: Build Android APK
-        run: npx tauri android build --apk
+      - name: Build Android Universal APK (arm64-v8a, armeabi-v7a, x86, x86_64)
+        run: npx tauri android build --apk --target aarch64 armv7 i686 x86_64
         env:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/28.2.13676358
 
