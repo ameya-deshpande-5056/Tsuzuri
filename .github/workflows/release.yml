@@ -108,6 +108,37 @@ jobs:
         env:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/28.2.13676358
 
+      - name: Sign Android APK
+        run: |
+          APK_RAW=$(find src-tauri/gen/android/app/build/outputs/apk -name "*.apk" | head -n 1)
+          if [ -z "$APK_RAW" ]; then
+            echo "Error: No APK found to sign!"
+            exit 1
+          fi
+          
+          echo "Found APK: $APK_RAW"
+          BUILD_TOOLS=$(find $ANDROID_HOME/build-tools -name "apksigner" | head -n 1 | xargs dirname)
+          echo "Using build-tools at: $BUILD_TOOLS"
+          
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "Signing with repository secret keystore..."
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > release.keystore
+            KEYSTORE="release.keystore"
+            PASS="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
+            ALIAS="${{ secrets.ANDROID_KEY_ALIAS }}"
+          else
+            echo "No keystore secret detected. Creating self-signed release key..."
+            keytool -genkey -v -keystore release.keystore -alias tsuzuri -keyalg RSA -keysize 2048 -validity 10000 -storepass tsuzuripass -keypass tsuzuripass -dname "CN=Tsuzuri, O=Tsuzuri, C=US"
+            KEYSTORE="release.keystore"
+            PASS="tsuzuripass"
+            ALIAS="tsuzuri"
+          fi
+
+          "$BUILD_TOOLS/zipalign" -f -v -p 4 "$APK_RAW" app-aligned.apk
+          "$BUILD_TOOLS/apksigner" sign --ks "$KEYSTORE" --ks-pass "pass:$PASS" --ks-key-alias "$ALIAS" --key-pass "pass:$PASS" --out app-signed.apk app-aligned.apk
+          "$BUILD_TOOLS/apksigner" verify app-signed.apk
+          cp app-signed.apk "$APK_RAW"
+
       - name: Copy & Rename APK with Release Version
         run: |
           RAW_TAG="${{ github.ref_name || inputs.tag }}"
