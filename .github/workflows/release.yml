@@ -108,10 +108,14 @@ jobs:
         env:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/28.2.13676358
 
-      - name: Copy & Rename APK
+      - name: Copy & Rename APK with Release Version
         run: |
+          RAW_TAG="${{ github.ref_name || inputs.tag }}"
+          VERSION="${RAW_TAG#v}"
           mkdir -p release-artifacts
-          find src-tauri/gen/android/app/build/outputs/apk -name "*.apk" -exec cp {} release-artifacts/tsuzuri-android.apk \;
+          find src-tauri/gen/android/app/build/outputs/apk -name "*.apk" | head -n 1 | while read -r apk; do
+            cp "$apk" "release-artifacts/tsuzuri_${VERSION}_android.apk"
+          done
 
       - name: Upload APK to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -119,7 +123,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name || inputs.tag }}
-          files: release-artifacts/tsuzuri-android.apk
+          files: release-artifacts/*.apk
 
   release-ios:
     name: Build iOS IPA
@@ -146,8 +150,10 @@ jobs:
       - name: Initialize iOS Target
         run: npx tauri ios init --ci --skip-targets-install
 
-      - name: Build iOS Application Payload
+      - name: Build iOS Application Payload & IPA
         run: |
+          RAW_TAG="${{ github.ref_name || inputs.tag }}"
+          VERSION="${RAW_TAG#v}"
           npx tauri ios build --debug
           mkdir -p release-artifacts/Payload
           
@@ -155,16 +161,16 @@ jobs:
           if [ -d "$APP_DIR" ]; then
             cp -r "$APP_DIR" release-artifacts/Payload/
             cd release-artifacts
-            zip -r tsuzuri-ios-unsigned.ipa Payload
+            zip -r "tsuzuri_${VERSION}_ios.ipa" Payload
           else
             echo "Warning: .app directory not found in build outputs"
           fi
 
       - name: Upload IPA to GitHub Release
         uses: softprops/action-gh-release@v2
-        if: hashFiles('release-artifacts/tsuzuri-ios-unsigned.ipa') != ''
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name || inputs.tag }}
-          files: release-artifacts/tsuzuri-ios-unsigned.ipa
+          files: release-artifacts/*.ipa
+

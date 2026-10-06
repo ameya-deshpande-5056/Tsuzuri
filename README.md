@@ -392,8 +392,8 @@ Once pushed, GitHub Actions will:
    - `tsuzuri_1.0.0_amd64.deb` (Linux)
    - `tsuzuri_1.0.0_x64-setup.exe` (Windows)
    - `tsuzuri_1.0.0_universal.dmg` (macOS)
-   - `tsuzuri-android.apk` (Android)
-   - `tsuzuri-ios-unsigned.ipa` (iOS)
+   - `tsuzuri_1.0.0_android.apk` (Android)
+   - `tsuzuri_1.0.0_ios.ipa` (iOS)
 
 You can also trigger a release manually at any time by going to **Actions > Release > Run workflow** on GitHub.
 
