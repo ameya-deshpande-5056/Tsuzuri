@@ -172,4 +172,120 @@ fn hello() {
     expect(container.querySelector("img[onerror]")).toBeNull();
     expect(container.querySelector("a[href^='javascript:']")).toBeNull();
   });
+
+  it("renders LaTeX bracket display \\[...\\] and inline \\(...\\) math", async () => {
+    const md = `
+Display bracket formula:
+\\[
+\\int_0^1 x^2 dx = \\frac{1}{3}
+\\]
+
+Inline bracket formula is \\( E = mc^2 \\).
+`;
+    await renderDocument(md, container, null);
+
+    const displayWrapper = container.querySelector(".katex-display-wrapper");
+    expect(displayWrapper).not.toBeNull();
+    expect(displayWrapper?.querySelector(".katex-display")).not.toBeNull();
+
+    const inlineWrapper = container.querySelector(".katex-inline-wrapper");
+    expect(inlineWrapper).not.toBeNull();
+    expect(inlineWrapper?.querySelector(".katex")).not.toBeNull();
+  });
+
+  it("renders bare LaTeX environments (align, equation, pmatrix)", async () => {
+    const md = `
+\\begin{align}
+a &= b + c \\\\
+d &= e + f
+\\end{align}
+
+\\begin{pmatrix}
+1 & 0 \\\\
+0 & 1
+\\end{pmatrix}
+`;
+    await renderDocument(md, container, null);
+
+    const displayWrappers = container.querySelectorAll(".katex-display-wrapper");
+    expect(displayWrappers.length).toBe(2);
+    expect(displayWrappers[0].querySelector(".katex")).not.toBeNull();
+    expect(displayWrappers[1].querySelector(".katex")).not.toBeNull();
+  });
+
+  it("renders fenced math code blocks (math and katex)", async () => {
+    const md = `
+\`\`\`math
+\\sum_{k=1}^n k = \\frac{n(n+1)}{2}
+\`\`\`
+
+\`\`\`katex
+\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1
+\`\`\`
+`;
+    await renderDocument(md, container, null);
+
+    const displayWrappers = container.querySelectorAll(".katex-display-wrapper");
+    expect(displayWrappers.length).toBe(2);
+    expect(displayWrappers[0].querySelector(".katex")).not.toBeNull();
+    expect(displayWrappers[1].querySelector(".katex")).not.toBeNull();
+  });
+
+  it("distinguishes currency dollar signs from math formulas", async () => {
+    const md = `
+The ticket costs $15 and the meal is $25, but the equation $x + y = z$ is math.
+`;
+    await renderDocument(md, container, null);
+
+    expect(container.textContent).toContain("$15 and the meal is $25");
+    const inlineWrapper = container.querySelector(".katex-inline-wrapper");
+    expect(inlineWrapper).not.toBeNull();
+    expect(inlineWrapper?.textContent).toContain("x+y=z");
+  });
+
+  it("renders safe HTML elements and inline styles", async () => {
+    const md = `
+<div class="custom-card" style="padding: 10px; background-color: rgb(240, 240, 240);">
+  <span style="color: rgb(255, 0, 0);">Red alert</span>
+  <details>
+    <summary>More Info</summary>
+    <p>Detailed expandable description.</p>
+  </details>
+  <u>Underlined text</u> and <kbd>Ctrl+C</kbd>
+</div>
+`;
+    await renderDocument(md, container, null);
+
+    const card = container.querySelector(".custom-card") as HTMLElement;
+    expect(card).not.toBeNull();
+    expect(card.style.padding).toBe("10px");
+
+    const span = card.querySelector("span") as HTMLElement;
+    expect(span).not.toBeNull();
+    expect(span.style.color).toBe("rgb(255, 0, 0)");
+
+    const details = card.querySelector("details");
+    expect(details).not.toBeNull();
+    expect(card.querySelector("summary")?.textContent).toBe("More Info");
+    expect(card.querySelector("u")?.textContent).toBe("Underlined text");
+    expect(card.querySelector("kbd")?.textContent).toBe("Ctrl+C");
+  });
+
+  it("preserves embedded CSS style blocks", async () => {
+    const md = `
+<style>
+  .custom-highlight { font-weight: bold; text-decoration: underline; }
+</style>
+<span class="custom-highlight">Highlighted text</span>
+`;
+    await renderDocument(md, container, null);
+
+    const styleEl = container.querySelector("style");
+    expect(styleEl).not.toBeNull();
+    expect(styleEl?.textContent).toContain(".custom-highlight");
+
+    const spanEl = container.querySelector(".custom-highlight");
+    expect(spanEl).not.toBeNull();
+    expect(spanEl?.textContent).toBe("Highlighted text");
+  });
 });

@@ -19,6 +19,27 @@ This document tests the complete rendering and layout pipeline of **Tsuzuri** (ç
 
 Paragraph with **bold text**, *italicized text*, ***bold and italicized***, and ~~strikethrough text~~.
 
+HTML elements: <u>Underlined text</u>, <mark>highlighted text</mark>, <kbd>Ctrl</kbd> + <kbd>E</kbd> shortcut indicator, and inline styled <span style="color: #0284c7; font-weight: 600;">colored text</span>.
+
+<details>
+<summary>Collapsible HTML Section</summary>
+<p>This content is collapsed by default and expands cleanly when clicked, powered by native HTML5 <code>&lt;details&gt;</code> and <code>&lt;summary&gt;</code> support.</p>
+</details>
+
+<style>
+.tsuzuri-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+</style>
+
+Embedded CSS class test: <span class="tsuzuri-badge">Tsuzuri Tag</span> rendered via embedded <code>&lt;style&gt;</code> rules.
+
 Nested lists:
 1. First ordered item
    1. Sub-item A
@@ -69,18 +90,34 @@ https://github.com/ameya-deshpande-5056/md-latex-mermaid2pdf/blob/main/deeply/ne
 Inline mathematics:
 The mass-energy equivalence is expressed as $E = mc^2$, and the Euler identity is $e^{i\pi} + 1 = 0$.
 The divergence theorem is $\int_V (\nabla \cdot \vec{F})\, dV = \oint_S (\vec{F} \cdot \hat{n})\, dS$.
+LaTeX bracket inline notation is also supported: \( \psi(x, t) = A e^{i(kx - \omega t)} \).
 
-Display equations:
+Standard Display equations ($$...$$):
 
 $$
 \int_{-\infty}^{\infty} e^{-x^2}\, dx = \sqrt{\pi}
 $$
 
-Cauchy's Integral Formula:
+LaTeX Bracket Display equations (\[...\]):
 
-$$
+\[
 f(a) = \frac{1}{2\pi i} \oint_\gamma \frac{f(z)}{z - a}\, dz
-$$
+\]
+
+Bare LaTeX Alignment Environment (\begin{align}...\end{align}):
+
+\begin{align}
+\nabla \cdot \vec{E} &= \frac{\rho}{\varepsilon_0} \\
+\nabla \cdot \vec{B} &= 0 \\
+\nabla \times \vec{E} &= -\frac{\partial \vec{B}}{\partial t} \\
+\nabla \times \vec{B} &= \mu_0 \vec{J} + \mu_0 \varepsilon_0 \frac{\partial \vec{E}}{\partial t}
+\end{align}
+
+Fenced Math Code Block (```math):
+
+```math
+\sum_{n=1}^\infty \frac{1}{n^2} = \frac{\pi^2}{6}
+```
 
 Wide Matrix Display (must fit width / contain overflow cleanly):
 

@@ -45,28 +45,61 @@ interface MathToken {
 
 function protectMath(markdown: string): { source: string; tokens: MathToken[] } {
   const tokens: MathToken[] = [];
-  // Split out fenced code blocks to avoid replacing math inside code blocks
+  // Split out fenced code blocks and inline code
   const parts = markdown.split(/(```[\s\S]*?```|`[^`\n]+`)/g);
 
   const processed = parts.map((part) => {
-    // If it's a code block or inline code, leave untouched
-    if (part.startsWith("```") || part.startsWith("`")) {
+    // Check if it's a fenced code block with math/katex
+    if (part.startsWith("```")) {
+      const mathBlockMatch = part.match(/^```(?:math|katex)[^\S\r\n]*\r?\n([\s\S]*?)\r?\n?```$/i);
+      if (mathBlockMatch) {
+        const id = `@@MATH_BLOCK_${tokens.length}@@`;
+        tokens.push({ id, tex: mathBlockMatch[1].trim(), display: true });
+        return `\n\n${id}\n\n`;
+      }
       return part;
     }
 
-    // Replace display math $$...$$
-    let text = part.replace(/\$\$([\s\S]+?)\$\$/g, (_, tex) => {
+    // Leave standard inline code untouched
+    if (part.startsWith("`")) {
+      return part;
+    }
+
+    let text = part;
+
+    // 1. Replace display math $$...$$
+    text = text.replace(/\$\$([\s\S]+?)\$\$/g, (_, tex) => {
       const id = `@@MATH_BLOCK_${tokens.length}@@`;
-      tokens.push({ id, tex, display: true });
+      tokens.push({ id, tex: tex.trim(), display: true });
       return `\n\n${id}\n\n`;
     });
 
-    // Replace inline math $...$ (ensuring not double $$)
-    text = text.replace(/(^|[^\\])\$([^\n$]+?)\$/g, (match, prefix, tex) => {
-      // Ignore if empty or escaped
-      if (!tex.trim()) return match;
+    // 2. Replace display math \[...\]
+    text = text.replace(/\\\[([\s\S]+?)\\\]/g, (_, tex) => {
+      const id = `@@MATH_BLOCK_${tokens.length}@@`;
+      tokens.push({ id, tex: tex.trim(), display: true });
+      return `\n\n${id}\n\n`;
+    });
+
+    // 3. Replace standard LaTeX environments (\begin{align}...\end{align}, etc.)
+    text = text.replace(/(\\begin\{([a-zA-Z*]+)\}[\s\S]+?\\end\{\2\})/g, (_, fullTex) => {
+      const id = `@@MATH_BLOCK_${tokens.length}@@`;
+      tokens.push({ id, tex: fullTex.trim(), display: true });
+      return `\n\n${id}\n\n`;
+    });
+
+    // 4. Replace inline math \(...\)
+    text = text.replace(/\\\(([\s\S]+?)\\\)/g, (_, tex) => {
       const id = `@@MATH_INLINE_${tokens.length}@@`;
-      tokens.push({ id, tex, display: false });
+      tokens.push({ id, tex: tex.trim(), display: false });
+      return id;
+    });
+
+    // 5. Replace inline math $...$ (ensuring not double $$ or currency amounts like $10 and $20)
+    text = text.replace(/(^|[^\w\\\$])\$([^\s\$](?:[^\\\$]*?(?:\\.[^\\\$]*?)*?[^\s\$]|))\$(?!\d)/g, (match, prefix, tex) => {
+      if (!tex.trim() || /\n\s*\n/.test(tex)) return match;
+      const id = `@@MATH_INLINE_${tokens.length}@@`;
+      tokens.push({ id, tex: tex.trim(), display: false });
       return `${prefix}${id}`;
     });
 
@@ -78,7 +111,7 @@ function protectMath(markdown: string): { source: string; tokens: MathToken[] } 
 
 // Configure markdown-it instance
 const md = new MarkdownIt({
-  html: false,
+  html: true,
   xhtmlOut: false,
   breaks: true,
   langPrefix: "language-",
@@ -89,6 +122,10 @@ const md = new MarkdownIt({
     if (trimmedLang === "mermaid") {
       const id = `mermaid-${Math.random().toString(36).slice(2, 10)}`;
       return `<div class="mermaid-diagram" data-id="${id}"><pre class="mermaid-source">${escapeHtml(code)}</pre></div>`;
+    }
+
+    if (trimmedLang === "math" || trimmedLang === "katex") {
+      return `<div class="katex-display-wrapper">${renderTex(code.trim(), true)}</div>`;
     }
 
     if (trimmedLang && hljs.getLanguage(trimmedLang)) {
@@ -158,8 +195,10 @@ function restoreMath(html: string, tokens: MathToken[]): string {
       : `<span class="katex-inline-wrapper">${rendered}</span>`;
 
     // Handle when markdown-it wraps placeholder in <p>
-    const pPattern = new RegExp(`<p>\\s*${token.id}\\s*<\\/p>`, "g");
-    result = result.replace(pPattern, replacement);
+    if (token.display) {
+      const pPattern = new RegExp(`<p>(?:\\s|<br\\s*\\/?>)*${token.id}(?:\\s|<br\\s*\\/?>)*<\\/p>`, "g");
+      result = result.replace(pPattern, replacement);
+    }
     result = result.replaceAll(token.id, replacement);
   }
   return result;
@@ -361,9 +400,22 @@ export async function renderDocument(
 
   // 4. Sanitize HTML with DOMPurify
   const cleanHtml = DOMPurify.sanitize(withMathHtml, {
-    ADD_TAGS: ["math", "semantics", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "mtable", "mtr", "mtd", "annotation"],
-    ADD_ATTR: ["aria-hidden", "focusable", "data-id", "data-mermaid-id", "target", "class", "style", "id"],
+    ADD_TAGS: [
+      "style",
+      // MathML tags
+      "math", "semantics", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "mtable", "mtr", "mtd",
+      "annotation", "mover", "munder", "munderover", "msubsup", "msqrt", "mroot", "mspace", "mtext",
+      "mpadded", "mphantom", "menclose", "mfenced",
+      // SVG elements used by KaTeX for roots, arrows, and wide delimiters
+      "svg", "path", "circle", "rect", "line", "polyline", "polygon", "use", "defs", "g",
+    ],
+    ADD_ATTR: [
+      "aria-hidden", "focusable", "data-id", "data-mermaid-id", "target", "class", "style", "id",
+      "xmlns", "viewBox", "d", "fill", "stroke", "stroke-width", "preserveAspectRatio", "width", "height",
+      "x", "y", "r", "cx", "cy", "transform",
+    ],
     ALLOW_DATA_ATTR: true,
+    FORCE_BODY: true,
   });
 
   // 5. Update DOM
