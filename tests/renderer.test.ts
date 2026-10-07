@@ -115,6 +115,54 @@ $$
     expect(displayWrapper?.querySelector(".katex-display")).not.toBeNull();
   });
 
+  it("renders complex gathered math blocks with linebreaks and percentages", async () => {
+    const md = `
+<!-- Layout: (\`\`\`mermaid) and ($$ math $$) -->
+<style>body { font-size: 10pt; }</style>
+
+**📐 Math notation**
+
+$$
+\\begin{gathered}
+\\text{Percentage} = \\frac{\\text{part}}{\\text{whole}} \\times 100
+\\qquad
+\\%\\text{ change} = \\frac{\\text{new} - \\text{old}}{\\text{old}} \\times 100
+\\\\[6pt]
+\\text{Two successive changes of } a\\% \\text{ and } b\\%:\\quad
+\\text{net factor} = \\left(1+\\tfrac{a}{100}\\right)\\left(1+\\tfrac{b}{100}\\right)
+\\end{gathered}
+$$
+`;
+    await renderDocument(md, container, null);
+
+    const displayWrapper = container.querySelector(".katex-display-wrapper");
+    expect(displayWrapper).not.toBeNull();
+    expect(displayWrapper?.querySelector(".katex-display")).not.toBeNull();
+    expect(displayWrapper?.textContent).toContain("Percentage");
+    expect(container.textContent).not.toContain("$$");
+  });
+
+  it("does not treat HTML comments with backticks as code fences", async () => {
+    const md = `
+<!-- Needs a tool that renders Mermaid (\`\`\`mermaid) and LaTeX ($$ ... $$) -->
+
+$$
+E = mc^2
+$$
+
+\`\`\`mermaid
+flowchart LR
+    A --> B
+\`\`\`
+`;
+    await renderDocument(md, container, null);
+
+    const katex = container.querySelector(".katex-display");
+    expect(katex).not.toBeNull();
+    const mermaid = container.querySelector(".mermaid-diagram");
+    expect(mermaid).not.toBeNull();
+  });
+
   it("handles broken/invalid LaTeX gracefully without throwing", async () => {
     const md = `
 Broken math: $\\invalidmacro{{{unclosed$

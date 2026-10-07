@@ -43,70 +43,176 @@ interface MathToken {
   display: boolean;
 }
 
+interface MarkdownSegment {
+  type: "code" | "html_comment" | "text";
+  info?: string;
+  text: string;
+}
+
+// Helper to accurately segment Markdown into code fences, HTML comments, and standard text blocks
+function splitMarkdownBlocks(markdown: string): MarkdownSegment[] {
+  const lines = markdown.replace(/\r\n/g, "\n").split("\n");
+  const segments: MarkdownSegment[] = [];
+  let currentSegment: string[] = [];
+  let inCodeFence = false;
+  let fenceChar = "";
+  let fenceLength = 0;
+  let fenceInfo = "";
+  let inHtmlComment = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (inCodeFence) {
+      currentSegment.push(line);
+      const closeMatch = line.match(/^[ ]{0,3}(`{3,}|~{3,})[ ]*$/);
+      if (closeMatch && closeMatch[1][0] === fenceChar && closeMatch[1].length >= fenceLength) {
+        segments.push({ type: "code", info: fenceInfo, text: currentSegment.join("\n") });
+        currentSegment = [];
+        inCodeFence = false;
+      }
+      continue;
+    }
+
+    if (inHtmlComment) {
+      currentSegment.push(line);
+      if (line.includes("-->")) {
+        segments.push({ type: "html_comment", text: currentSegment.join("\n") });
+        currentSegment = [];
+        inHtmlComment = false;
+      }
+      continue;
+    }
+
+    // HTML comment opening on its own line (CommonMark HTML Block Type 2)
+    if (/^[ ]{0,3}<!--/.test(line)) {
+      if (currentSegment.length > 0) {
+        segments.push({ type: "text", text: currentSegment.join("\n") });
+        currentSegment = [];
+      }
+      currentSegment.push(line);
+      if (!line.includes("-->")) {
+        inHtmlComment = true;
+      } else {
+        segments.push({ type: "html_comment", text: currentSegment.join("\n") });
+        currentSegment = [];
+      }
+      continue;
+    }
+
+    // Fenced code block opening (CommonMark Section 4.5)
+    const openMatch = line.match(/^[ ]{0,3}(`{3,}|~{3,})[ \t]*(.*)$/);
+    if (openMatch) {
+      const char = openMatch[1][0];
+      const info = openMatch[2].trim();
+      // Backtick fences cannot have backticks in their info string
+      if (char === "~" || !info.includes("`")) {
+        if (currentSegment.length > 0) {
+          segments.push({ type: "text", text: currentSegment.join("\n") });
+          currentSegment = [];
+        }
+        fenceChar = char;
+        fenceLength = openMatch[1].length;
+        fenceInfo = info;
+        inCodeFence = true;
+        currentSegment.push(line);
+        continue;
+      }
+    }
+
+    currentSegment.push(line);
+  }
+
+  if (currentSegment.length > 0) {
+    segments.push({
+      type: inCodeFence ? "code" : (inHtmlComment ? "html_comment" : "text"),
+      info: fenceInfo,
+      text: currentSegment.join("\n"),
+    });
+  }
+
+  return segments;
+}
+
 function protectMath(markdown: string): { source: string; tokens: MathToken[] } {
   const tokens: MathToken[] = [];
-  // Split out fenced code blocks and inline code
-  const parts = markdown.split(/(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]+`)/g);
+  const segments = splitMarkdownBlocks(markdown);
 
-  const processed = parts.map((part) => {
-    // Check if it's a fenced code block with math/katex
-    if (part.startsWith("```") || part.startsWith("~~~")) {
-      const mathBlockMatch = part.match(/^(?:```|~~~)(?:math|katex)[^\S\r\n]*\r?\n([\s\S]*?)\r?\n?(?:```|~~~)$/i);
-      if (mathBlockMatch) {
+  const processed = segments.map((seg) => {
+    // 1. Fenced code blocks
+    if (seg.type === "code") {
+      const lowerInfo = (seg.info || "").toLowerCase();
+      if (lowerInfo === "math" || lowerInfo === "katex") {
+        const lines = seg.text.split("\n");
+        const inner = lines.slice(1, -1).join("\n").trim();
         const id = `@@MATH_BLOCK_${tokens.length}@@`;
-        tokens.push({ id, tex: mathBlockMatch[1].trim(), display: true });
+        tokens.push({ id, tex: inner, display: true });
         return `\n\n${id}\n\n`;
       }
-      return part;
+      return seg.text;
     }
 
-    // Leave standard inline code untouched
-    if (part.startsWith("`")) {
-      return part;
+    // 2. HTML comments: preserve untouched
+    if (seg.type === "html_comment") {
+      return seg.text;
     }
 
-    let text = part;
+    // 3. Regular text: isolate inline code spans so math is never matched inside `...`
+    const inlineParts = seg.text.split(/(`+[^`\r\n]+?`+)/g);
+    const handledParts = inlineParts.map((part) => {
+      if (part.startsWith("`")) return part;
 
-    // 1. Replace display math $$...$$
-    text = text.replace(/\$\$([\s\S]+?)\$\$/g, (_, tex) => {
-      const id = `@@MATH_BLOCK_${tokens.length}@@`;
-      tokens.push({ id, tex: tex.trim(), display: true });
-      return `\n\n${id}\n\n`;
+      let t = part;
+
+      // 3.1. Display math $$...$$
+      t = t.replace(/\$\$([\s\S]+?)\$\$/g, (_, tex) => {
+        const id = `@@MATH_BLOCK_${tokens.length}@@`;
+        tokens.push({ id, tex: tex.trim(), display: true });
+        return `\n\n${id}\n\n`;
+      });
+
+      // 3.2. Display math \[...\] (ensuring not preceded by backslash, e.g. \\[6pt])
+      t = t.replace(/(^|[^\\])\\\[([\s\S]+?)\\\]/g, (_, prefix, tex) => {
+        const id = `@@MATH_BLOCK_${tokens.length}@@`;
+        tokens.push({ id, tex: tex.trim(), display: true });
+        return `${prefix}\n\n${id}\n\n`;
+      });
+
+      // 3.3. LaTeX environments (\begin{align}...\end{align}, \begin{gathered}...\end{gathered}, etc.)
+      t = t.replace(
+        /(^|[^\\])(\\begin\{(?:equation\*?|align\*?|gather\*?|gathered|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|cases|split|aligned)\}[\s\S]+?\\end\{[a-zA-Z*]+\})/g,
+        (_, prefix, fullTex) => {
+          const id = `@@MATH_BLOCK_${tokens.length}@@`;
+          tokens.push({ id, tex: fullTex.trim(), display: true });
+          return `${prefix}\n\n${id}\n\n`;
+        }
+      );
+
+      // 3.4. Inline math \(...\)
+      t = t.replace(/(^|[^\\])\\\(([\s\S]+?)\\\)/g, (_, prefix, tex) => {
+        const id = `@@MATH_INLINE_${tokens.length}@@`;
+        tokens.push({ id, tex: tex.trim(), display: false });
+        return `${prefix}${id}`;
+      });
+
+      // 3.5. Inline math $...$
+      t = t.replace(
+        /(^|[^\w\\\$])\$([^\s\$](?:[^\\\$]*?(?:\\.[^\\\$]*?)*?[^\s\$\\]|))\$(?!\d)/g,
+        (match, prefix, tex) => {
+          if (!tex.trim() || /\n\s*\n/.test(tex)) return match;
+          const id = `@@MATH_INLINE_${tokens.length}@@`;
+          tokens.push({ id, tex: tex.trim(), display: false });
+          return `${prefix}${id}`;
+        }
+      );
+
+      return t;
     });
 
-    // 2. Replace display math \[...\]
-    text = text.replace(/\\\[([\s\S]+?)\\\]/g, (_, tex) => {
-      const id = `@@MATH_BLOCK_${tokens.length}@@`;
-      tokens.push({ id, tex: tex.trim(), display: true });
-      return `\n\n${id}\n\n`;
-    });
-
-    // 3. Replace standard LaTeX environments (\begin{align}...\end{align}, etc.)
-    text = text.replace(/(\\begin\{([a-zA-Z*]+)\}[\s\S]+?\\end\{\2\})/g, (_, fullTex) => {
-      const id = `@@MATH_BLOCK_${tokens.length}@@`;
-      tokens.push({ id, tex: fullTex.trim(), display: true });
-      return `\n\n${id}\n\n`;
-    });
-
-    // 4. Replace inline math \(...\)
-    text = text.replace(/\\\(([\s\S]+?)\\\)/g, (_, tex) => {
-      const id = `@@MATH_INLINE_${tokens.length}@@`;
-      tokens.push({ id, tex: tex.trim(), display: false });
-      return id;
-    });
-
-    // 5. Replace inline math $...$ (ensuring not double $$ or currency amounts like $10 and $20)
-    text = text.replace(/(^|[^\w\\\$])\$([^\s\$](?:[^\\\$]*?(?:\\.[^\\\$]*?)*?[^\s\$]|))\$(?!\d)/g, (match, prefix, tex) => {
-      if (!tex.trim() || /\n\s*\n/.test(tex)) return match;
-      const id = `@@MATH_INLINE_${tokens.length}@@`;
-      tokens.push({ id, tex: tex.trim(), display: false });
-      return `${prefix}${id}`;
-    });
-
-    return text;
+    return handledParts.join("");
   });
 
-  return { source: processed.join(""), tokens };
+  return { source: processed.join("\n"), tokens };
 }
 
 function normalizeCodeLang(language: string): string {
@@ -218,20 +324,29 @@ function renderTex(tex: string, display: boolean): string {
 
 // Restore math tokens
 function restoreMath(html: string, tokens: MathToken[]): string {
-  let result = html;
+  if (!tokens.length) return html;
+
+  const tokenMap = new Map<string, { replacement: string; display: boolean }>();
   for (const token of tokens) {
     const rendered = renderTex(token.tex, token.display);
     const replacement = token.display
       ? `<div class="katex-display-wrapper">${rendered}</div>`
       : `<span class="katex-inline-wrapper">${rendered}</span>`;
-
-    // Handle when markdown-it wraps placeholder in <p>
-    if (token.display) {
-      const pPattern = new RegExp(`<p>(?:\\s|<br\\s*\\/?>)*${token.id}(?:\\s|<br\\s*\\/?>)*<\\/p>`, "g");
-      result = result.replace(pPattern, replacement);
-    }
-    result = result.replaceAll(token.id, replacement);
+    tokenMap.set(token.id, { replacement, display: token.display });
   }
+
+  // 1. Replace standalone paragraph-wrapped display math blocks
+  let result = html.replace(
+    /<p>(?:\s|<br\s*\/?>)*(@@MATH_BLOCK_\d+@@)(?:\s|<br\s*\/?>)*<\/p>/g,
+    (_, id) => tokenMap.get(id)?.replacement || id
+  );
+
+  // 2. Replace any remaining math token IDs (inline math or inline-display math)
+  result = result.replace(
+    /@@MATH_(?:BLOCK|INLINE)_\d+@@/g,
+    (id) => tokenMap.get(id)?.replacement || id
+  );
+
   return result;
 }
 
