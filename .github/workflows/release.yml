@@ -87,7 +87,7 @@ jobs:
       - name: Install Android NDK & Build Tools
         run: |
           echo y | sdkmanager --licenses || true
-          sdkmanager --install "ndk;28.2.13676358" "build-tools;35.0.0" "platforms;android-35"
+          sdkmanager --install "ndk;28.2.13676358" "build-tools;36.0.0" "platforms;android-36"
 
       - name: Install Rust & Android Targets
         uses: dtolnay/rust-toolchain@stable
