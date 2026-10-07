@@ -109,6 +109,34 @@ function protectMath(markdown: string): { source: string; tokens: MathToken[] } 
   return { source: processed.join(""), tokens };
 }
 
+function normalizeCodeLang(language: string): string {
+  const raw = String(language || "").trim().toLowerCase();
+  const aliases: Record<string, string> = {
+    cplusplus: "cpp",
+    cxx: "cpp",
+    "c++": "cpp",
+    csharp: "cs",
+    "c#": "cs",
+    golang: "go",
+    javascript: "js",
+    node: "js",
+    nodejs: "js",
+    typescript: "ts",
+    py: "python",
+    rb: "ruby",
+    rs: "rust",
+    sh: "bash",
+    zsh: "bash",
+    shell: "bash",
+    docker: "dockerfile",
+    gql: "graphql",
+    yml: "yaml",
+  };
+  if (aliases[raw]) return aliases[raw];
+  const cleaned = raw.replace(/[^\w-]/g, "");
+  return aliases[cleaned] || cleaned;
+}
+
 // Configure markdown-it instance
 const md = new MarkdownIt({
   html: true,
@@ -128,10 +156,13 @@ const md = new MarkdownIt({
       return `<div class="katex-display-wrapper">${renderTex(code.trim(), true)}</div>`;
     }
 
-    if (trimmedLang && hljs.getLanguage(trimmedLang)) {
+    const normLang = normalizeCodeLang(trimmedLang);
+    const resolvedLang = hljs.getLanguage(normLang) ? normLang : (hljs.getLanguage(trimmedLang) ? trimmedLang : "");
+
+    if (resolvedLang) {
       try {
-        const highlighted = hljs.highlight(code, { language: trimmedLang, ignoreIllegals: true }).value;
-        return `<pre class="hljs"><button class="code-copy-btn" title="Copy code" aria-label="Copy code">Copy</button><code class="language-${trimmedLang}">${highlighted}</code></pre>`;
+        const highlighted = hljs.highlight(code, { language: resolvedLang, ignoreIllegals: true }).value;
+        return `<pre class="hljs"><button class="code-copy-btn" title="Copy code" aria-label="Copy code">Copy</button><code class="language-${resolvedLang}">${highlighted}</code></pre>`;
       } catch {
         // Fallback below
       }
@@ -211,7 +242,7 @@ export function extractHeadings(markdown: string): HeadingItem[] {
   let inCodeBlock = false;
 
   for (const line of lines) {
-    if (line.trim().startsWith("```")) {
+    if (line.trim().startsWith("```") || line.trim().startsWith("~~~")) {
       inCodeBlock = !inCodeBlock;
       continue;
     }
@@ -232,6 +263,18 @@ export function extractHeadings(markdown: string): HeadingItem[] {
 
   lastParsedHeadings = headings;
   return headings;
+}
+
+// Generate in-document Table of Contents HTML for [[toc]] or [toc]
+export function buildEmbeddedToc(markdown: string): string {
+  const headings = extractHeadings(markdown).filter(
+    (h) => !h.text.toLowerCase().includes("[[toc]]") && !h.text.toLowerCase().includes("[toc]")
+  );
+  if (!headings.length) return "";
+  const items = headings.map(
+    (h) => `<li class="toc-item-level-${h.level}" style="margin-left: ${(h.level - 1) * 1}rem;"><a href="#${h.id}">${escapeHtml(h.text)}</a></li>`
+  ).join("");
+  return `<nav class="document-toc" aria-label="Table of Contents"><div class="document-toc-title">Table of Contents</div><ol class="document-toc-list">${items}</ol></nav>`;
 }
 
 export function getLastHeadings(): HeadingItem[] {
@@ -395,8 +438,11 @@ export async function renderDocument(
     "\n\n<div class=\"page-break\"></div>\n\n"
   );
 
+  // 0.5. Expand embedded Table of Contents ([[toc]] or [toc])
+  const withToc = normalizedMd.replace(/\[\[toc\]\]|\[toc\]/gi, () => buildEmbeddedToc(normalizedMd));
+
   // 1. Protect LaTeX math
-  const { source: mathProtectedMd, tokens: mathTokens } = protectMath(normalizedMd);
+  const { source: mathProtectedMd, tokens: mathTokens } = protectMath(withToc);
 
   // 2. Parse Markdown to HTML
   const rawHtml = md.render(mathProtectedMd);

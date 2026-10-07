@@ -468,6 +468,49 @@ pre.hljs:focus-within .code-copy-btn {
   color: #ffa657;
 }
 
+/* In-document Embedded Table of Contents */
+.document-toc {
+  margin: 1.75rem 0 2.25rem 0;
+  padding: 1.25rem 1.5rem;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.document-toc-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.document-toc-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.document-toc-list li {
+  margin: 0.35rem 0;
+  line-height: 1.5;
+}
+
+.document-toc-list a {
+  color: var(--link-color);
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: color 0.15s ease;
+}
+
+.document-toc-list a:hover {
+  text-decoration: underline;
+}
+
 /* Responsive Narrow Screen Typography & Padding */
 @media (max-width: 600px) {
   .reader-content {

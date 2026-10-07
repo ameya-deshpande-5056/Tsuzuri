@@ -639,7 +639,8 @@ class TsuzuriApp {
     const trimmed = content.trim();
     const wordCount = trimmed ? trimmed.split(/\s+/).length : 0;
     const charCount = content.length;
-    this.editorStats.textContent = `${wordCount} words · ${charCount} chars`;
+    const readTimeMinutes = Math.max(1, Math.round(wordCount / 200));
+    this.editorStats.textContent = `${wordCount} words · ${charCount} chars · ${readTimeMinutes} min read`;
   }
 
   // Find & Replace UI

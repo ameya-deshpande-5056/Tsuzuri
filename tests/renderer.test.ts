@@ -314,4 +314,46 @@ Content D
     const pageBreaks = container.querySelectorAll(".page-break");
     expect(pageBreaks.length).toBe(3);
   });
+
+  it("expands [[toc]] and [toc] into an in-document Table of Contents", async () => {
+    const md = `
+# Project Title
+
+[[toc]]
+
+## Architecture
+Some details.
+
+### Storage
+More details.
+`;
+    await renderDocument(md, container, null);
+
+    const docToc = container.querySelector(".document-toc");
+    expect(docToc).not.toBeNull();
+    const links = docToc?.querySelectorAll("a");
+    expect(links?.length).toBe(3);
+    expect(links?.[0].getAttribute("href")).toBe("#project-title");
+    expect(links?.[1].getAttribute("href")).toBe("#architecture");
+    expect(links?.[2].getAttribute("href")).toBe("#storage");
+  });
+
+  it("handles code language aliases and tilde fences", async () => {
+    const md = `
+~~~js
+const x = 42;
+~~~
+
+\`\`\`c++
+int main() { return 0; }
+\`\`\`
+`;
+    await renderDocument(md, container, null);
+
+    const codeBlocks = container.querySelectorAll("pre.hljs code");
+    expect(codeBlocks.length).toBe(2);
+    expect(codeBlocks[0].className).toContain("language-js");
+    expect(codeBlocks[1].className).toContain("language-cpp");
+  });
 });
+
