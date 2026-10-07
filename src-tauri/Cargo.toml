@@ -34,6 +34,13 @@ tauri-plugin-dialog = { version = "2", default-features = false, features = ["xd
 jni = "0.21"
 ndk-context = "0.1"
 
+[profile.dev]
+debug = 1
+
+# Strip debug symbols from 3rd-party dependencies to keep target directory compact
+[profile.dev.package."*"]
+debug = 0
+
 [profile.release]
 opt-level = "s"
 lto = true
