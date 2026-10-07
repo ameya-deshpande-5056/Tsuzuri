@@ -22,10 +22,13 @@ jobs:
           java-version: '21'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ''
 
-      - name: Install Android NDK
+      - name: Install Android NDK & Build Tools
         run: |
+          yes | sdkmanager --licenses || true
           sdkmanager --install "ndk;28.2.13676358" "build-tools;36.0.0" "platforms;android-37"
 
       - name: Install Rust
@@ -49,6 +52,8 @@ jobs:
         run: npx tauri android build --apk --debug --target aarch64 armv7 i686 x86_64
         env:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/28.2.13676358
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/28.2.13676358
+          ANDROID_NDK_ROOT: ${{ env.ANDROID_HOME }}/ndk/28.2.13676358
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
@@ -63,8 +68,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+      - name: Select Xcode 16
+        run: |
+          XCODE_PATH=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -n 1)
+          if [ -n "$XCODE_PATH" ]; then
+            echo "Selecting Xcode: $XCODE_PATH"
+            sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+            echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> $GITHUB_ENV
+          else
+            echo "No Xcode 16 found under /Applications/Xcode_16*.app, keeping default"
+          fi
+          xcodebuild -version
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -89,11 +103,13 @@ jobs:
           npx tauri ios build --debug
           
           # Package Payload into unsigned IPA for ad-hoc / AltStore / Sideloadly testing
-          cd src-tauri/gen/apple/build/arm64
-          if [ -d "tsuzuri.app" ]; then
+          APP_DIR=$(find src-tauri/gen/apple/build -name "*.app" 2>/dev/null | head -n 1)
+          if [ -n "$APP_DIR" ] && [ -d "$APP_DIR" ]; then
             mkdir -p Payload
-            cp -r tsuzuri.app Payload/
-            zip -r ../../../../tsuzuri-unsigned.ipa Payload/
+            cp -r "$APP_DIR" Payload/
+            zip -r tsuzuri-unsigned.ipa Payload/
+          else
+            echo "Warning: .app directory not found in build outputs"
           fi
 
       - name: Upload iOS Artifact
@@ -103,4 +119,5 @@ jobs:
           path: |
             tsuzuri-unsigned.ipa
             src-tauri/gen/apple/build/**/*.app
+          if-no-files-found: warn
 
