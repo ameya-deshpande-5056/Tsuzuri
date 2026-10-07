@@ -288,4 +288,30 @@ The ticket costs $15 and the meal is $25, but the equation $x + y = z$ is math.
     expect(spanEl).not.toBeNull();
     expect(spanEl?.textContent).toBe("Highlighted text");
   });
+
+  it("normalizes explicit page-break directives (\\pagebreak, \\newpage, <!-- pagebreak -->)", async () => {
+    const md = `
+# Section A
+Content A
+
+\\pagebreak
+
+# Section B
+Content B
+
+\\newpage
+
+# Section C
+Content C
+
+<!-- pagebreak -->
+
+# Section D
+Content D
+`;
+    await renderDocument(md, container, null);
+
+    const pageBreaks = container.querySelectorAll(".page-break");
+    expect(pageBreaks.length).toBe(3);
+  });
 });

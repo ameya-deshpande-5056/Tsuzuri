@@ -389,8 +389,14 @@ export async function renderDocument(
   container: HTMLElement,
   docDirectory: string | null
 ): Promise<HeadingItem[]> {
+  // 0. Normalize explicit page-break directives (\pagebreak, \newpage, <!-- pagebreak -->)
+  const normalizedMd = markdown.replace(
+    /(?:^|\n)[ \t]*(?:\\(?:pagebreak|newpage)|<!--[ \t]*page-?break[ \t]*-->)[ \t]*(?:\r?\n|$)/gi,
+    "\n\n<div class=\"page-break\"></div>\n\n"
+  );
+
   // 1. Protect LaTeX math
-  const { source: mathProtectedMd, tokens: mathTokens } = protectMath(markdown);
+  const { source: mathProtectedMd, tokens: mathTokens } = protectMath(normalizedMd);
 
   // 2. Parse Markdown to HTML
   const rawHtml = md.render(mathProtectedMd);

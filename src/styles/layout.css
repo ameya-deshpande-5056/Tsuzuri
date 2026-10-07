@@ -525,11 +525,57 @@
   }
 }
 
+/* Explicit Page Break Utility */
+.page-break,
+.pagebreak {
+  display: block;
+  clear: both;
+}
+
+@media screen {
+  .page-break,
+  .pagebreak {
+    margin: 2.5rem 0;
+    border: none;
+    border-top: 1px dashed var(--border-default);
+    position: relative;
+    opacity: 0.6;
+  }
+
+  .page-break::after,
+  .pagebreak::after {
+    content: "Page Break";
+    position: absolute;
+    top: -0.65rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--bg-canvas);
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 500;
+    padding: 0 0.5rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+}
+
 /* Print & PDF Export Styles */
 @media print {
   @page {
     margin: 1.5cm;
     size: auto;
+  }
+
+  /* Force clean page break on explicit break elements */
+  .page-break,
+  .pagebreak {
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    break-after: page !important;
+    page-break-after: always !important;
   }
 
   /* Hide application UI chrome */
@@ -576,20 +622,34 @@
     line-height: 1.6 !important;
   }
 
+  /* Prevent heading orphan isolation at the bottom of pages */
+  h1, h2, h3, h4, h5, h6 {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  /* Paragraph and list item orphan/widow protection */
+  p, li {
+    orphans: 3;
+    widows: 3;
+  }
+
   /* Prevent page-break cutting within equations, tables, code, diagrams */
   .katex-display-wrapper {
     overflow: visible !important;
-    break-inside: avoid;
-    page-break-inside: avoid;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 
   pre.hljs,
   .table-wrapper,
   .mermaid-diagram,
   blockquote,
+  img,
+  figure,
   .table-wrapper table {
-    break-inside: avoid;
-    page-break-inside: avoid;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
     box-shadow: none !important;
   }
 
