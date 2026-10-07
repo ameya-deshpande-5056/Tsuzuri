@@ -141,5 +141,23 @@ describe("Tsuzuri MarkdownEditor", () => {
 
     expect(lineGutter.scrollTop).toBe(42);
   });
+
+  it("wraps selection with markdown formatting snippets", () => {
+    editor.setValue("Selected text", true);
+    textarea.selectionStart = 0;
+    textarea.selectionEnd = 8; // "Selected"
+    editor.wrapSelection("**", "**");
+
+    expect(editor.getValue()).toBe("**Selected** text");
+  });
+
+  it("formats markdown and aligns markdown tables", () => {
+    const raw = "| Feature | Status |\n|---|---|\n| Table | OK |";
+    editor.setValue(raw, true);
+    editor.formatMarkdown();
+
+    expect(editor.getValue()).toContain("| Feature | Status |");
+    expect(editor.getValue()).toContain("| Table   | OK     |");
+  });
 });
 

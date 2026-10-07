@@ -92,88 +92,88 @@
   font-size: 0.8rem;
 }
 
-/* Editor Surface & Line Gutter */
-.editor-pane {
-  --editor-line-height: 22px;
-  --editor-font-size: 0.88rem;
-  --editor-padding-top: 1rem;
-}
-
+/* Editor Surface & Line Numbers (Reference: md-latex-mermaid2pdf) */
 .editor-surface {
   position: relative;
-  display: flex;
   flex: 1;
+  min-height: 0;
   width: 100%;
   height: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  background-color: var(--bg-canvas);
   overflow: hidden;
 }
 
 .line-gutter {
-  width: 52px;
-  min-width: 52px;
-  height: 100%;
-  padding: var(--editor-padding-top) 0.6rem calc(4rem + var(--safe-area-bottom)) 0;
-  text-align: right;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  line-height: var(--editor-line-height);
-  color: var(--text-faint);
-  user-select: none;
-  background-color: var(--bg-surface);
-  border-right: 1px solid var(--border-default);
-  overflow-y: hidden;
-  overflow-x: hidden;
-  box-sizing: border-box;
-}
-
-.line-number {
-  min-height: var(--editor-line-height);
-  line-height: var(--editor-line-height);
-  box-sizing: border-box;
+  min-width: 48px;
+  margin: 0;
+  padding: 18px 10px calc(4rem + var(--safe-area-bottom)) 10px;
   overflow: hidden;
+  border-right: 1px solid var(--border-default);
   color: var(--text-faint);
-  transition: color 0.1s ease;
-  cursor: pointer;
+  background-color: var(--bg-surface);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.65;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  -webkit-user-select: none;
+  user-select: none;
+  box-sizing: border-box;
+  white-space: pre;
 }
 
-.line-number:hover {
-  color: var(--text-secondary);
+.line-gutter span {
+  display: block;
+  box-sizing: border-box;
 }
 
-.line-number.active {
+.line-gutter span.active {
   color: var(--text-primary);
   font-weight: 600;
 }
 
+.line-gutter span:hover {
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
 .markdown-textarea {
-  flex: 1;
+  min-height: 0;
+  width: 100%;
   height: 100%;
-  padding: var(--editor-padding-top) 1.25rem calc(4rem + var(--safe-area-bottom)) 1.25rem;
-  font-family: var(--font-mono);
-  font-size: var(--editor-font-size);
-  line-height: var(--editor-line-height);
-  tab-size: 2;
-  color: var(--text-primary);
-  background-color: var(--bg-canvas);
-  border: none;
-  outline: none;
   resize: none;
-  overflow-y: auto;
+  border: 0;
+  outline: 0;
+  padding: 18px 18px calc(4rem + var(--safe-area-bottom)) 18px;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.65;
+  white-space: pre;
+  overflow: auto;
+  overflow-wrap: normal;
+  word-break: normal;
+  tab-size: 2;
   box-sizing: border-box;
 }
 
-.markdown-textarea.word-wrap {
-  white-space: pre-wrap !important;
-  word-break: break-word !important;
-  overflow-wrap: anywhere !important;
-  overflow-x: hidden !important;
+.editor-surface.word-wrap .markdown-textarea {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
-.markdown-textarea.no-wrap {
-  white-space: pre !important;
-  word-break: normal !important;
-  overflow-wrap: normal !important;
-  overflow-x: auto !important;
+.editor-line-measure {
+  position: fixed;
+  top: 0;
+  left: -100000px;
+  visibility: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .markdown-textarea::selection {
@@ -182,30 +182,6 @@
 
 [data-theme="dark"] .markdown-textarea::selection {
   background-color: rgba(59, 130, 246, 0.35);
-}
-
-/* Hidden line measurement container for wrapped lines */
-.editor-measure-container {
-  position: absolute;
-  visibility: hidden;
-  top: -99999px;
-  left: -99999px;
-  pointer-events: none;
-  overflow: hidden;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  box-sizing: border-box;
-}
-
-.editor-measure-row {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  box-sizing: border-box;
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-wrap: anywhere;
 }
 
 /* Editor Statusbar */
@@ -253,21 +229,16 @@
   border-color: var(--border-default);
 }
 
-/* Responsive Editor Adjustments for Mobile Screens */
+/* Responsive Editor Adjustments for Mobile Screens (aligned with md-latex-mermaid2pdf) */
 @media (max-width: 600px) {
-  .editor-pane {
-    --editor-line-height: 24px;
-    --editor-font-size: 16px; /* Prevents mobile browser auto-zoom */
-    --editor-padding-top: 0.75rem;
-  }
   .line-gutter {
-    width: 38px;
     min-width: 38px;
-    font-size: 0.75rem;
-    padding: var(--editor-padding-top) 0.35rem calc(4rem + var(--safe-area-bottom)) 0;
+    padding: 14px 8px calc(4rem + var(--safe-area-bottom)) 8px;
+    font-size: 13px;
   }
   .markdown-textarea {
-    padding: var(--editor-padding-top) 0.65rem calc(4rem + var(--safe-area-bottom)) 0.65rem;
+    padding: 14px 12px calc(4rem + var(--safe-area-bottom)) 12px;
+    font-size: 13px;
   }
   .find-replace-bar {
     padding: 0.4rem 0.6rem;

@@ -7,21 +7,35 @@ export interface EditorOptions {
   wordWrap?: boolean;
 }
 
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+function normalizeSeparator(cell: string, width: number): string {
+  const left = cell.startsWith(":");
+  const right = cell.endsWith(":");
+  const dashCount = Math.max(3, width - Number(left) - Number(right));
+  return `${left ? ":" : ""}${"-".repeat(dashCount)}${right ? ":" : ""}`.padEnd(width, " ");
+}
+
+function alignMarkdownTables(markdown: string): string {
+  const blocks = markdown.split(/\n{2,}/);
+  return blocks.map((block) => {
+    const rows = block.split("\n");
+    if (rows.length < 2 || !rows.every((row) => /^\s*\|.*\|\s*$/.test(row))) return block;
+    const cells = rows.map((row) => row.trim().slice(1, -1).split("|").map((cell) => cell.trim()));
+    const widths = cells[0].map((_, index) => Math.max(...cells.map((row) => (row[index] || "").length)));
+    return cells.map((row, rowIndex) => {
+      const padded = row.map((cell, index) => rowIndex === 1 ? normalizeSeparator(cell, widths[index]) : cell.padEnd(widths[index], " "));
+      return `| ${padded.join(" | ")} |`;
+    }).join("\n");
+  }).join("\n\n");
 }
 
 export class MarkdownEditor {
+  private container: HTMLElement;
   private textarea: HTMLTextAreaElement;
   private lineGutter: HTMLElement;
   private callbacks: EditorCallbacks;
-  private measureContainer: HTMLElement;
+  private lineMeasure: HTMLElement;
   private wordWrap: boolean = true;
+  private renderedLineCount: number = 0;
 
   // Search state
   private findMatches: number[] = [];
@@ -36,7 +50,7 @@ export class MarkdownEditor {
   private historyDebounceTimer: number = 0;
 
   constructor(
-    _container: HTMLElement,
+    container: HTMLElement,
     textarea: HTMLTextAreaElement,
     lineGutter: HTMLElement,
     callbacks: EditorCallbacks,
@@ -44,16 +58,17 @@ export class MarkdownEditor {
   ) {
     this.textarea = textarea;
     this.lineGutter = lineGutter;
+    this.container = (textarea.closest(".editor-surface") || textarea.parentElement || container) as HTMLElement;
     this.callbacks = callbacks;
     this.wordWrap = options?.wordWrap ?? true;
 
-    // Create hidden measuring container for wrapped line calculations
-    this.measureContainer = document.createElement("div");
-    this.measureContainer.className = "editor-measure-container";
-    this.measureContainer.setAttribute("aria-hidden", "true");
-    document.body.appendChild(this.measureContainer);
+    // Line measure element from md-latex-mermaid2pdf
+    this.lineMeasure = document.createElement("div");
+    this.lineMeasure.className = "editor-line-measure";
+    this.lineMeasure.setAttribute("aria-hidden", "true");
+    document.body.appendChild(this.lineMeasure);
 
-    this.setWordWrap(this.wordWrap, false);
+    this.applyEditorWrap();
     this.initEvents();
   }
 
@@ -71,7 +86,7 @@ export class MarkdownEditor {
 
     // Sync scroll between textarea and line gutter
     this.textarea.addEventListener("scroll", () => {
-      this.syncScroll();
+      this.syncLineNumbers();
     });
 
     // Forward wheel scrolling on line gutter to textarea
@@ -97,7 +112,7 @@ export class MarkdownEditor {
 
     // Jump to line when clicking line number in gutter
     this.lineGutter.addEventListener("click", (e: MouseEvent) => {
-      const target = (e.target as HTMLElement).closest(".line-number") as HTMLElement;
+      const target = (e.target as HTMLElement).closest("span") as HTMLElement;
       if (!target) return;
       const lineNum = parseInt(target.textContent || "1", 10);
       if (!isNaN(lineNum)) {
@@ -141,28 +156,30 @@ export class MarkdownEditor {
       }
     });
 
-    // Resize observer to recalculate line heights when editor container dimensions change
+    // Resize observer matching md-latex-mermaid2pdf
     if (typeof ResizeObserver !== "undefined") {
-      const resizeObserver = new ResizeObserver(() => {
-        this.updateLineNumbers();
-      });
-      resizeObserver.observe(this.textarea);
+      new ResizeObserver(() => this.updateLineNumbers(true)).observe(this.textarea);
     }
+  }
+
+  public applyEditorWrap(): void {
+    const enabled = this.wordWrap;
+    this.textarea.wrap = enabled ? "soft" : "off";
+    this.textarea.classList.toggle("word-wrap", enabled);
+    this.textarea.classList.toggle("no-wrap", !enabled);
+    if (this.container) {
+      this.container.classList.toggle("word-wrap", enabled);
+      this.container.classList.toggle("no-wrap", !enabled);
+    }
+    this.textarea.scrollLeft = 0;
+    this.updateLineNumbers(true);
   }
 
   public setWordWrap(enabled: boolean, update: boolean = true): void {
     this.wordWrap = enabled;
-    if (enabled) {
-      this.textarea.wrap = "soft";
-      this.textarea.classList.remove("no-wrap");
-      this.textarea.classList.add("word-wrap");
-    } else {
-      this.textarea.wrap = "off";
-      this.textarea.classList.remove("word-wrap");
-      this.textarea.classList.add("no-wrap");
-    }
-    if (update) {
-      this.updateLineNumbers();
+    this.applyEditorWrap();
+    if (!update) {
+      // already updated
     }
   }
 
@@ -185,20 +202,24 @@ export class MarkdownEditor {
   public highlightActiveLine(): void {
     const pos = this.textarea.selectionStart;
     const textBefore = this.textarea.value.substring(0, pos);
-    const lineNumber = textBefore.split("\n").length;
+    const lineNumber = this.countEditorLines(textBefore);
 
-    const lineElements = this.lineGutter.children;
-    for (let i = 0; i < lineElements.length; i++) {
+    const spans = this.lineGutter.querySelectorAll("span");
+    for (let i = 0; i < spans.length; i++) {
       if (i + 1 === lineNumber) {
-        lineElements[i].classList.add("active");
+        spans[i].classList.add("active");
       } else {
-        lineElements[i].classList.remove("active");
+        spans[i].classList.remove("active");
       }
     }
   }
 
-  public syncScroll(): void {
+  public syncLineNumbers(): void {
     this.lineGutter.scrollTop = this.textarea.scrollTop;
+  }
+
+  public syncScroll(): void {
+    this.syncLineNumbers();
   }
 
   private reportCursorPosition(): void {
@@ -215,7 +236,7 @@ export class MarkdownEditor {
 
   public setValue(content: string, resetHistory: boolean = false): void {
     this.textarea.value = content;
-    this.updateLineNumbers();
+    this.updateLineNumbers(true);
     if (resetHistory) {
       this.undoStack = [content];
       this.redoStack = [];
@@ -230,84 +251,103 @@ export class MarkdownEditor {
     this.textarea.focus();
   }
 
-  // Synchronized line numbering
-  public updateLineNumbers(): void {
-    const value = this.textarea.value;
-    const lines = value.split("\n");
-    const lineCount = lines.length;
-
-    // If word-wrap is disabled, every line occupies exactly 1 standard line-height
-    if (!this.wordWrap) {
-      this.renderUnwrappedLineNumbers(lineCount);
-      return;
+  public updateLineNumbers(force: boolean = false): void {
+    const count = this.countEditorLines(this.textarea.value);
+    if (this.wordWrap) {
+      this.renderWrappedLineNumbers();
+    } else if (force || count !== this.renderedLineCount) {
+      this.renderUnwrappedLineNumbers(count);
     }
-
-    this.renderWrappedLineNumbers(lines);
+    this.renderedLineCount = count;
+    this.syncLineNumbers();
+    this.highlightActiveLine();
   }
 
-  private renderUnwrappedLineNumbers(lineCount: number): void {
-    const computed = window.getComputedStyle(this.textarea);
-    const defaultLineHeight = parseFloat(computed.lineHeight) || 22;
-
-    let gutterHtml = "";
-    for (let i = 1; i <= lineCount; i++) {
-      gutterHtml += `<div class="line-number" style="height: ${defaultLineHeight}px; line-height: ${defaultLineHeight}px;">${i}</div>`;
+  private renderUnwrappedLineNumbers(count: number): void {
+    const fragment = document.createDocumentFragment();
+    for (let i = 1; i <= count; i++) {
+      const number = document.createElement("span");
+      number.className = "line-number";
+      number.textContent = String(i);
+      fragment.appendChild(number);
     }
-    this.lineGutter.innerHTML = gutterHtml;
-    this.highlightActiveLine();
-    this.syncScroll();
+    this.lineGutter.replaceChildren(fragment);
   }
 
-  private renderWrappedLineNumbers(lines: string[]): void {
-    const computed = window.getComputedStyle(this.textarea);
-    const paddingLeft = parseFloat(computed.paddingLeft) || 0;
-    const paddingRight = parseFloat(computed.paddingRight) || 0;
-    const contentWidth = this.textarea.clientWidth - paddingLeft - paddingRight;
-    const defaultLineHeight = parseFloat(computed.lineHeight) || 22;
+  private renderWrappedLineNumbers(): void {
+    const editorStyle = window.getComputedStyle(this.textarea);
+    const contentWidth = this.textarea.clientWidth
+      - parseFloat(editorStyle.paddingLeft)
+      - parseFloat(editorStyle.paddingRight);
+    const defaultLineHeight = parseFloat(editorStyle.lineHeight) || 23.1;
 
-    // In environments with no layout (e.g. clientWidth <= 0 in jsdom / hidden container)
-    if (contentWidth <= 0) {
-      this.renderUnwrappedLineNumbers(lines.length);
-      return;
+    this.lineMeasure.style.width = `${Math.max(1, contentWidth)}px`;
+    this.lineMeasure.style.font = editorStyle.font;
+    this.lineMeasure.style.lineHeight = editorStyle.lineHeight;
+    this.lineMeasure.style.letterSpacing = editorStyle.letterSpacing;
+    this.lineMeasure.style.tabSize = editorStyle.tabSize;
+
+    const fragment = document.createDocumentFragment();
+    this.textarea.value.split("\n").forEach((line, index) => {
+      this.lineMeasure.textContent = line || "\u200b";
+      const number = document.createElement("span");
+      number.className = "line-number";
+      number.textContent = String(index + 1);
+      const measuredH = this.lineMeasure.getBoundingClientRect().height || defaultLineHeight;
+      number.style.height = `${measuredH}px`;
+      fragment.appendChild(number);
+    });
+    this.lineGutter.replaceChildren(fragment);
+  }
+
+  private countEditorLines(value: string): number {
+    let count = 1;
+    for (let index = 0; index < value.length; index += 1) {
+      if (value.charCodeAt(index) === 10) count += 1;
+    }
+    return count;
+  }
+
+  public wrapSelection(before: string, after: string, fallback: string = ""): void {
+    const start = this.textarea.selectionStart;
+    const end = this.textarea.selectionEnd;
+    const selected = this.textarea.value.slice(start, end) || fallback;
+    this.textarea.setRangeText(`${before}${selected}${after}`, start, end, "select");
+    this.textarea.focus();
+    this.callbacks.onContentChange(this.textarea.value);
+    this.schedulePushHistory(this.textarea.value);
+    this.updateLineNumbers();
+  }
+
+  public formatMarkdown(): void {
+    const lines = this.textarea.value.replace(/\r\n/g, "\n").split("\n");
+    const formatted: string[] = [];
+    let inFence = false;
+    let previousBlank = false;
+
+    for (const rawLine of lines) {
+      let line = rawLine.replace(/[ \t]+$/g, "");
+      if (/^```/.test(line.trim())) inFence = !inFence;
+      if (!inFence) {
+        line = line.replace(/^(#{1,6})([^\s#])/g, "$1 $2");
+        line = line.replace(/^(\s*[-*+])\s{2,}/g, "$1 ");
+        line = line.replace(/^(\s*\d+\.)\s{2,}/g, "$1 ");
+      }
+      const blank = line.trim() === "";
+      if (blank && previousBlank) continue;
+      formatted.push(line);
+      previousBlank = blank;
     }
 
-    // Configure measuring container to match textarea text rendering area
-    this.measureContainer.style.width = `${Math.max(1, contentWidth)}px`;
-    this.measureContainer.style.fontFamily = computed.fontFamily;
-    this.measureContainer.style.fontSize = computed.fontSize;
-    this.measureContainer.style.fontWeight = computed.fontWeight;
-    this.measureContainer.style.letterSpacing = computed.letterSpacing;
-    this.measureContainer.style.tabSize = computed.tabSize;
-    this.measureContainer.style.lineHeight = `${defaultLineHeight}px`;
-
-    // Render all rows into measuring container in one write
-    this.measureContainer.innerHTML = lines.map((line) => {
-      const text = escapeHtml(line);
-      return `<div class="editor-measure-row" style="min-height: ${defaultLineHeight}px; line-height: ${defaultLineHeight}px;">${text || "&#8203;"}</div>`;
-    }).join("");
-
-    // Read all row heights (browser computes in 1 batch layout pass)
-    const rows = this.measureContainer.children;
-    const rowCount = rows.length;
-    let gutterHtml = "";
-
-    for (let i = 0; i < rowCount; i++) {
-      const rowEl = rows[i] as HTMLElement;
-      const measuredH = rowEl.offsetHeight || defaultLineHeight;
-      const lineRows = Math.max(1, Math.round(measuredH / defaultLineHeight));
-      const rowHeight = lineRows * defaultLineHeight;
-
-      gutterHtml += `<div class="line-number" style="height: ${rowHeight}px; line-height: ${defaultLineHeight}px;">${i + 1}</div>`;
-    }
-
-    this.lineGutter.innerHTML = gutterHtml;
-    this.highlightActiveLine();
-    this.syncScroll();
+    this.textarea.value = alignMarkdownTables(formatted.join("\n")).trim() + "\n";
+    this.callbacks.onContentChange(this.textarea.value);
+    this.schedulePushHistory(this.textarea.value);
+    this.updateLineNumbers(true);
   }
 
   public destroy(): void {
-    if (this.measureContainer && this.measureContainer.parentNode) {
-      this.measureContainer.parentNode.removeChild(this.measureContainer);
+    if (this.lineMeasure && this.lineMeasure.parentNode) {
+      this.lineMeasure.parentNode.removeChild(this.lineMeasure);
     }
   }
 
