@@ -233,11 +233,11 @@ npm run tauri build
 ```
 Artifacts will be located at:
 - Standalone Executable: `src-tauri/target/release/tsuzuri`
-- Debian package: `src-tauri/target/release/bundle/deb/tsuzuri_1.0.0_amd64.deb`
+- Debian package: `src-tauri/target/release/bundle/deb/Tsuzuri_1.0.0_amd64.deb`
 
 To install locally on Debian/Ubuntu/Mint/Pop!_OS:
 ```bash
-sudo dpkg -i src-tauri/target/release/bundle/deb/tsuzuri_1.0.0_amd64.deb
+sudo dpkg -i src-tauri/target/release/bundle/deb/Tsuzuri_1.0.0_amd64.deb
 ```
 
 ---
@@ -252,8 +252,8 @@ rustup target add x86_64-pc-windows-msvc
 npm run tauri build -- --target x86_64-pc-windows-msvc
 ```
 Artifacts will be located at:
-- NSIS Setup Installer: `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/tsuzuri_1.0.0_x64-setup.exe`
-- WiX MSI Package: `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/tsuzuri_1.0.0_x64_en-US.msi`
+- NSIS Setup Installer: `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/Tsuzuri_1.0.0_x64-setup.exe`
+- WiX MSI Package: `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/Tsuzuri_1.0.0_x64_en-US.msi`
 
 ---
 
@@ -267,7 +267,7 @@ rustup target add aarch64-apple-darwin x86_64-apple-darwin
 npm run tauri build -- --target universal-apple-darwin
 ```
 Artifacts will be located at:
-- Apple Disk Image: `src-tauri/target/universal-apple-darwin/release/bundle/dmg/tsuzuri_1.0.0_universal.dmg`
+- Apple Disk Image: `src-tauri/target/universal-apple-darwin/release/bundle/dmg/Tsuzuri_1.0.0_universal.dmg`
 - macOS Application Bundle: `src-tauri/target/universal-apple-darwin/release/bundle/macos/tsuzuri.app`
 
 ---
@@ -399,11 +399,11 @@ Once pushed, GitHub Actions will:
 1. Spin up Ubuntu, Windows, and macOS cloud runners concurrently.
 2. Compile and package the native binaries for all five platforms.
 3. Create a **GitHub Release** tagged `v1.0.0` with the downloadable files:
-   - `tsuzuri_1.0.0_amd64.deb` (Linux)
-   - `tsuzuri_1.0.0_x64-setup.exe` (Windows)
-   - `tsuzuri_1.0.0_universal.dmg` (macOS)
-   - `tsuzuri_1.0.0.apk`
-   - `tsuzuri_1.0.0.ipa`
+   - `Tsuzuri_1.0.0_amd64.deb` (Linux)
+   - `Tsuzuri_1.0.0_x64-setup.exe` (Windows)
+   - `Tsuzuri_1.0.0_universal.dmg` (macOS)
+   - `Tsuzuri_1.0.0.apk`
+   - `Tsuzuri_1.0.0.ipa`
 
 You can also trigger a release manually at any time by going to **Actions > Release > Run workflow** on GitHub.
 
