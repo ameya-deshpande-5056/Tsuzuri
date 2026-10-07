@@ -238,25 +238,16 @@ jobs:
           # Build frontend assets first
           npm run build
 
-          # Build iOS application with xcodebuild without code signing
-          npx tauri ios build --debug || xcodebuild \
-            -scheme tsuzuri_iOS \
-            -workspace src-tauri/gen/apple/tsuzuri.xcodeproj/project.xcworkspace/ \
-            -sdk iphoneos \
-            -configuration debug \
-            -derivedDataPath src-tauri/gen/apple/build \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM="" \
-            build
+          # Build iOS application bundle
+          # Note: Tauri's exportArchive step exits with code 70 when no Apple Developer Team is configured,
+          # but the full debug .app bundle is already successfully compiled and generated in DerivedData.
+          npx tauri ios build --debug || true
 
           mkdir -p release-artifacts/Payload
           
-          APP_DIR=$(find src-tauri/gen/apple ~/Library/Developer/Xcode/DerivedData -name "*.app" 2>/dev/null | grep "Debug-iphoneos" | head -n 1)
+          APP_DIR=$(find ~/Library/Developer/Xcode/DerivedData src-tauri/gen/apple -name "*.app" -type d 2>/dev/null | grep -i "iphoneos" | head -n 1)
           if [ -z "$APP_DIR" ]; then
-            APP_DIR=$(find src-tauri/gen/apple ~/Library/Developer/Xcode/DerivedData -name "*.app" 2>/dev/null | head -n 1)
+            APP_DIR=$(find ~/Library/Developer/Xcode/DerivedData src-tauri/gen/apple -name "*.app" -type d 2>/dev/null | head -n 1)
           fi
 
           if [ -n "$APP_DIR" ] && [ -d "$APP_DIR" ]; then
@@ -264,8 +255,10 @@ jobs:
             cp -r "$APP_DIR" release-artifacts/Payload/
             cd release-artifacts
             zip -r "tsuzuri_${VERSION}.ipa" Payload
+            cd ..
           else
-            echo "Warning: .app directory not found in build outputs"
+            echo "Error: .app directory not found in build outputs"
+            exit 1
           fi
 
       - name: Upload IPA to GitHub Release
