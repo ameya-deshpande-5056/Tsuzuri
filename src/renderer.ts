@@ -46,12 +46,12 @@ interface MathToken {
 function protectMath(markdown: string): { source: string; tokens: MathToken[] } {
   const tokens: MathToken[] = [];
   // Split out fenced code blocks and inline code
-  const parts = markdown.split(/(```[\s\S]*?```|`[^`\n]+`)/g);
+  const parts = markdown.split(/(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]+`)/g);
 
   const processed = parts.map((part) => {
     // Check if it's a fenced code block with math/katex
-    if (part.startsWith("```")) {
-      const mathBlockMatch = part.match(/^```(?:math|katex)[^\S\r\n]*\r?\n([\s\S]*?)\r?\n?```$/i);
+    if (part.startsWith("```") || part.startsWith("~~~")) {
+      const mathBlockMatch = part.match(/^(?:```|~~~)(?:math|katex)[^\S\r\n]*\r?\n([\s\S]*?)\r?\n?(?:```|~~~)$/i);
       if (mathBlockMatch) {
         const id = `@@MATH_BLOCK_${tokens.length}@@`;
         tokens.push({ id, tex: mathBlockMatch[1].trim(), display: true });

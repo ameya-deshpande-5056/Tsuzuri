@@ -34,6 +34,7 @@ class TsuzuriApp {
   private btnToc!: HTMLButtonElement;
   private btnOpen!: HTMLButtonElement;
   private btnSave!: HTMLButtonElement;
+  private btnPrint!: HTMLButtonElement;
   private btnTheme!: HTMLButtonElement;
   private themeLabel!: HTMLElement;
   private docTitleEl!: HTMLElement;
@@ -51,6 +52,7 @@ class TsuzuriApp {
   private sheetBtnOpen!: HTMLButtonElement;
   private sheetBtnSave!: HTMLButtonElement;
   private sheetBtnFind!: HTMLButtonElement;
+  private sheetBtnPrint!: HTMLButtonElement;
   private isMobileSheetOpen: boolean = false;
 
   // Find & Replace Elements
@@ -109,6 +111,7 @@ class TsuzuriApp {
     this.btnToc = document.getElementById("btn-toc") as HTMLButtonElement;
     this.btnOpen = document.getElementById("btn-open") as HTMLButtonElement;
     this.btnSave = document.getElementById("btn-save") as HTMLButtonElement;
+    this.btnPrint = document.getElementById("btn-print") as HTMLButtonElement;
     this.btnTheme = document.getElementById("btn-theme") as HTMLButtonElement;
     this.themeLabel = document.getElementById("theme-label") as HTMLElement;
     this.docTitleEl = document.getElementById("doc-title") as HTMLElement;
@@ -125,6 +128,7 @@ class TsuzuriApp {
     this.sheetBtnOpen = document.getElementById("sheet-btn-open") as HTMLButtonElement;
     this.sheetBtnSave = document.getElementById("sheet-btn-save") as HTMLButtonElement;
     this.sheetBtnFind = document.getElementById("sheet-btn-find") as HTMLButtonElement;
+    this.sheetBtnPrint = document.getElementById("sheet-btn-print") as HTMLButtonElement;
 
     this.findReplaceBar = document.getElementById("find-replace-bar") as HTMLElement;
     this.replaceRow = document.getElementById("replace-row") as HTMLElement;
@@ -240,6 +244,7 @@ class TsuzuriApp {
     // File operations
     this.btnOpen.addEventListener("click", () => this.handleOpenFile());
     this.btnSave.addEventListener("click", () => this.handleSaveFile(false));
+    this.btnPrint.addEventListener("click", () => this.printDocument());
 
     // Theme toggle
     this.btnTheme.addEventListener("click", () => this.cycleTheme());
@@ -307,6 +312,11 @@ class TsuzuriApp {
       this.openFindBar(false);
     });
 
+    this.sheetBtnPrint.addEventListener("click", () => {
+      this.closeMobileSheet();
+      this.printDocument();
+    });
+
     document.querySelectorAll<HTMLButtonElement>(".sheet-theme-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         const mode = btn.getAttribute("data-theme-mode") as ThemeMode;
@@ -329,6 +339,9 @@ class TsuzuriApp {
       } else if (isCmdOrCtrl && e.key.toLowerCase() === "o") {
         e.preventDefault();
         this.handleOpenFile();
+      } else if (isCmdOrCtrl && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        this.printDocument();
       } else if (isCmdOrCtrl && e.shiftKey && e.key.toLowerCase() === "s") {
         e.preventDefault();
         this.handleSaveFile(true);
@@ -441,6 +454,13 @@ class TsuzuriApp {
       this.state.doc.directory
     );
     this.nav.updateHeadings(headings);
+  }
+
+  public async printDocument(): Promise<void> {
+    if (this.state.activeView !== "reader") {
+      await this.switchView("reader");
+    }
+    window.print();
   }
 
   // File Operations
