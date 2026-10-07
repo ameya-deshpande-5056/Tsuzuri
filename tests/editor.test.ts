@@ -95,5 +95,51 @@ describe("Tsuzuri MarkdownEditor", () => {
 
     vi.useRealTimers();
   });
+
+  it("supports toggling word wrap mode and updates classes", () => {
+    expect(editor.isWordWrap()).toBe(true);
+    expect(textarea.classList.contains("word-wrap")).toBe(true);
+    expect(textarea.wrap).toBe("soft");
+
+    editor.setWordWrap(false);
+    expect(editor.isWordWrap()).toBe(false);
+    expect(textarea.classList.contains("no-wrap")).toBe(true);
+    expect(textarea.wrap).toBe("off");
+
+    editor.setWordWrap(true);
+    expect(editor.isWordWrap()).toBe(true);
+    expect(textarea.classList.contains("word-wrap")).toBe(true);
+    expect(textarea.wrap).toBe("soft");
+  });
+
+  it("highlights active line number based on cursor position", () => {
+    editor.setValue("First line\nSecond line\nThird line", true);
+    editor.updateLineNumbers();
+
+    // Move cursor to "Second line" (char index 12)
+    textarea.selectionStart = 12;
+    textarea.selectionEnd = 12;
+    editor.highlightActiveLine();
+
+    const lineElements = lineGutter.querySelectorAll(".line-number");
+    expect(lineElements[1].classList.contains("active")).toBe(true);
+    expect(lineElements[0].classList.contains("active")).toBe(false);
+    expect(lineElements[2].classList.contains("active")).toBe(false);
+  });
+
+  it("navigates to line via goToLine", () => {
+    editor.setValue("Alpha\nBeta\nGamma", true);
+    editor.goToLine(2);
+
+    expect(textarea.selectionStart).toBe(6); // After "Alpha\n"
+  });
+
+  it("syncs scroll offset from textarea to line gutter", () => {
+    editor.setValue("1\n2\n3\n4\n5\n6\n7\n8\n9\n10", true);
+    textarea.scrollTop = 42;
+    editor.syncScroll();
+
+    expect(lineGutter.scrollTop).toBe(42);
+  });
 });
 

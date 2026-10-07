@@ -53,6 +53,8 @@ class TsuzuriApp {
   private sheetBtnSave!: HTMLButtonElement;
   private sheetBtnFind!: HTMLButtonElement;
   private sheetBtnPrint!: HTMLButtonElement;
+  private sheetBtnWrap!: HTMLButtonElement;
+  private sheetWrapLabel!: HTMLElement;
   private isMobileSheetOpen: boolean = false;
 
   // Find & Replace Elements
@@ -70,6 +72,7 @@ class TsuzuriApp {
   // Statusbar Elements
   private editorCursorPos!: HTMLElement;
   private editorStats!: HTMLElement;
+  private btnToggleWrap!: HTMLButtonElement;
 
   private toastTimeout: number | null = null;
 
@@ -129,6 +132,8 @@ class TsuzuriApp {
     this.sheetBtnSave = document.getElementById("sheet-btn-save") as HTMLButtonElement;
     this.sheetBtnFind = document.getElementById("sheet-btn-find") as HTMLButtonElement;
     this.sheetBtnPrint = document.getElementById("sheet-btn-print") as HTMLButtonElement;
+    this.sheetBtnWrap = document.getElementById("sheet-btn-wrap") as HTMLButtonElement;
+    this.sheetWrapLabel = document.getElementById("sheet-wrap-label") as HTMLElement;
 
     this.findReplaceBar = document.getElementById("find-replace-bar") as HTMLElement;
     this.replaceRow = document.getElementById("replace-row") as HTMLElement;
@@ -143,6 +148,7 @@ class TsuzuriApp {
 
     this.editorCursorPos = document.getElementById("editor-cursor-pos") as HTMLElement;
     this.editorStats = document.getElementById("editor-stats") as HTMLElement;
+    this.btnToggleWrap = document.getElementById("btn-toggle-wrap") as HTMLButtonElement;
   }
 
   private initThemeSystem(): void {
@@ -199,6 +205,7 @@ class TsuzuriApp {
   }
 
   private initEditor(): void {
+    const savedWrap = localStorage.getItem("tsuzuri-editor-wrap") !== "false";
     this.editor = new MarkdownEditor(
       this.editorView,
       this.markdownTextarea,
@@ -213,11 +220,32 @@ class TsuzuriApp {
         onCursorChange: (line, col) => {
           this.editorCursorPos.textContent = `Ln ${line}, Col ${col}`;
         },
-      }
+      },
+      { wordWrap: savedWrap }
     );
 
     this.editor.setValue(this.state.doc.content, true);
     this.updateEditorStats(this.state.doc.content);
+    this.updateWrapDisplay();
+  }
+
+  private toggleWordWrap(): void {
+    const next = !this.editor.isWordWrap();
+    this.editor.setWordWrap(next);
+    localStorage.setItem("tsuzuri-editor-wrap", String(next));
+    this.updateWrapDisplay();
+    this.showToast(`Word wrap: ${next ? "On" : "Off"}`);
+  }
+
+  private updateWrapDisplay(): void {
+    const isWrap = this.editor.isWordWrap();
+    if (this.btnToggleWrap) {
+      this.btnToggleWrap.textContent = `Wrap: ${isWrap ? "On" : "Off"}`;
+      this.btnToggleWrap.title = `Toggle Word Wrap (${isWrap ? "On" : "Off"}) (Alt+Z)`;
+    }
+    if (this.sheetWrapLabel) {
+      this.sheetWrapLabel.textContent = `Word Wrap: ${isWrap ? "On" : "Off"}`;
+    }
   }
 
   private initNavigation(): void {
@@ -317,6 +345,19 @@ class TsuzuriApp {
       this.printDocument();
     });
 
+    if (this.sheetBtnWrap) {
+      this.sheetBtnWrap.addEventListener("click", () => {
+        this.closeMobileSheet();
+        this.toggleWordWrap();
+      });
+    }
+
+    if (this.btnToggleWrap) {
+      this.btnToggleWrap.addEventListener("click", () => {
+        this.toggleWordWrap();
+      });
+    }
+
     document.querySelectorAll<HTMLButtonElement>(".sheet-theme-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         const mode = btn.getAttribute("data-theme-mode") as ThemeMode;
@@ -358,6 +399,9 @@ class TsuzuriApp {
         if (this.state.activeView === "editor" && document.activeElement === this.markdownTextarea) {
           // Native or custom editor undo handled
         }
+      } else if (e.altKey && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        this.toggleWordWrap();
       } else if (e.key === "Escape") {
         if (this.isMobileSheetOpen) {
           this.closeMobileSheet();
@@ -431,8 +475,7 @@ class TsuzuriApp {
       this.closeFindBar();
       this.readerView.focus();
     } else {
-      // Switched to Editor: sync content and focus
-      this.editor.setValue(this.state.doc.content);
+      // Switched to Editor: reveal editor view first so container width is valid
       this.readerView.style.display = "none";
       this.editorView.style.display = "flex";
       this.btnViewEditor.classList.add("active");
@@ -441,6 +484,9 @@ class TsuzuriApp {
       this.btnViewReader.setAttribute("aria-selected", "false");
       this.btnToc.style.display = "none";
       this.nav.closeToc();
+
+      this.editor.setValue(this.state.doc.content);
+      this.editor.updateLineNumbers();
       this.editor.focus();
     }
 

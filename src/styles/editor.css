@@ -93,6 +93,12 @@
 }
 
 /* Editor Surface & Line Gutter */
+.editor-pane {
+  --editor-line-height: 22px;
+  --editor-font-size: 0.88rem;
+  --editor-padding-top: 1rem;
+}
+
 .editor-surface {
   position: relative;
   display: flex;
@@ -106,41 +112,68 @@
   width: 52px;
   min-width: 52px;
   height: 100%;
-  padding: 1rem 0.6rem calc(4rem + var(--safe-area-bottom)) 0;
+  padding: var(--editor-padding-top) 0.6rem calc(4rem + var(--safe-area-bottom)) 0;
   text-align: right;
   font-family: var(--font-mono);
   font-size: 0.85rem;
-  line-height: 22px;
+  line-height: var(--editor-line-height);
   color: var(--text-faint);
   user-select: none;
   background-color: var(--bg-surface);
   border-right: 1px solid var(--border-default);
-  overflow: hidden;
+  overflow-y: hidden;
+  overflow-x: hidden;
   box-sizing: border-box;
 }
 
 .line-number {
-  height: 22px;
+  min-height: var(--editor-line-height);
+  line-height: var(--editor-line-height);
+  box-sizing: border-box;
+  overflow: hidden;
+  color: var(--text-faint);
+  transition: color 0.1s ease;
+  cursor: pointer;
+}
+
+.line-number:hover {
+  color: var(--text-secondary);
+}
+
+.line-number.active {
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .markdown-textarea {
   flex: 1;
   height: 100%;
-  padding: 1rem 1.25rem calc(4rem + var(--safe-area-bottom)) 1.25rem;
+  padding: var(--editor-padding-top) 1.25rem calc(4rem + var(--safe-area-bottom)) 1.25rem;
   font-family: var(--font-mono);
-  font-size: 0.88rem;
-  line-height: 22px;
+  font-size: var(--editor-font-size);
+  line-height: var(--editor-line-height);
   tab-size: 2;
   color: var(--text-primary);
   background-color: var(--bg-canvas);
   border: none;
   outline: none;
   resize: none;
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-wrap: anywhere;
   overflow-y: auto;
   box-sizing: border-box;
+}
+
+.markdown-textarea.word-wrap {
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+  overflow-x: hidden !important;
+}
+
+.markdown-textarea.no-wrap {
+  white-space: pre !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  overflow-x: auto !important;
 }
 
 .markdown-textarea::selection {
@@ -149,6 +182,30 @@
 
 [data-theme="dark"] .markdown-textarea::selection {
   background-color: rgba(59, 130, 246, 0.35);
+}
+
+/* Hidden line measurement container for wrapped lines */
+.editor-measure-container {
+  position: absolute;
+  visibility: hidden;
+  top: -99999px;
+  left: -99999px;
+  pointer-events: none;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  box-sizing: border-box;
+}
+
+.editor-measure-row {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 /* Editor Statusbar */
@@ -171,18 +228,46 @@
   user-select: none;
 }
 
+.status-left,
+.status-right {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.status-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 0.1rem 0.4rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.status-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+
 /* Responsive Editor Adjustments for Mobile Screens */
 @media (max-width: 600px) {
+  .editor-pane {
+    --editor-line-height: 24px;
+    --editor-font-size: 16px; /* Prevents mobile browser auto-zoom */
+    --editor-padding-top: 0.75rem;
+  }
   .line-gutter {
-    width: 34px;
-    min-width: 34px;
-    font-size: 0.72rem;
-    padding: 0.75rem 0.25rem calc(4rem + var(--safe-area-bottom)) 0;
+    width: 38px;
+    min-width: 38px;
+    font-size: 0.75rem;
+    padding: var(--editor-padding-top) 0.35rem calc(4rem + var(--safe-area-bottom)) 0;
   }
   .markdown-textarea {
-    font-size: 16px; /* Prevents mobile browser auto-zoom */
-    line-height: 24px;
-    padding: 0.75rem 0.65rem calc(4rem + var(--safe-area-bottom)) 0.65rem;
+    padding: var(--editor-padding-top) 0.65rem calc(4rem + var(--safe-area-bottom)) 0.65rem;
   }
   .find-replace-bar {
     padding: 0.4rem 0.6rem;
