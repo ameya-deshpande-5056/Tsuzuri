@@ -198,15 +198,69 @@ jobs:
       - name: Initialize iOS Target
         run: npx tauri ios init --ci --skip-targets-install
 
+      - name: Configure Unsigned iOS Build
+        run: |
+          cat << 'EOF' > ci.xcconfig
+          CODE_SIGN_IDENTITY = 
+          CODE_SIGNING_REQUIRED = NO
+          CODE_SIGNING_ALLOWED = NO
+          CODE_SIGN_STYLE = Manual
+          DEVELOPMENT_TEAM = 
+          PROVISIONING_PROFILE_SPECIFIER = 
+          EOF
+          echo "XCODE_XCCONFIG_FILE=$PWD/ci.xcconfig" >> $GITHUB_ENV
+
+          python3 -c "
+          import os, re
+          pbx = 'src-tauri/gen/apple/tsuzuri.xcodeproj/project.pbxproj'
+          if os.path.exists(pbx):
+              with open(pbx, 'r') as f:
+                  content = f.read()
+              content = content.replace('ProvisioningStyle = Automatic;', 'ProvisioningStyle = Manual;')
+              content = content.replace('CODE_SIGN_STYLE = Automatic;', 'CODE_SIGN_STYLE = Manual;')
+              content = re.sub(
+                  r'(buildSettings\s*=\s*\{)',
+                  r'\1\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGNING_REQUIRED = NO;\n\t\t\t\tCODE_SIGN_IDENTITY = \"\";\n\t\t\t\tCODE_SIGN_STYLE = Manual;',
+                  content
+              )
+              with open(pbx, 'w') as f:
+                  f.write(content)
+              print('Successfully patched project.pbxproj for unsigned build')
+          else:
+              print('Warning: project.pbxproj not found at', pbx)
+          "
+
       - name: Build iOS Application Payload & IPA
         run: |
           RAW_TAG="${{ github.ref_name || inputs.tag }}"
           VERSION="${RAW_TAG#v}"
-          npx tauri ios build --debug
+          
+          # Build frontend assets first
+          npm run build
+
+          # Build iOS application with xcodebuild without code signing
+          npx tauri ios build --debug || xcodebuild \
+            -scheme tsuzuri_iOS \
+            -workspace src-tauri/gen/apple/tsuzuri.xcodeproj/project.xcworkspace/ \
+            -sdk iphoneos \
+            -configuration debug \
+            -derivedDataPath src-tauri/gen/apple/build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="" \
+            build
+
           mkdir -p release-artifacts/Payload
           
-          APP_DIR=$(find src-tauri/gen/apple/build -name "*.app" 2>/dev/null | head -n 1)
+          APP_DIR=$(find src-tauri/gen/apple ~/Library/Developer/Xcode/DerivedData -name "*.app" 2>/dev/null | grep "Debug-iphoneos" | head -n 1)
+          if [ -z "$APP_DIR" ]; then
+            APP_DIR=$(find src-tauri/gen/apple ~/Library/Developer/Xcode/DerivedData -name "*.app" 2>/dev/null | head -n 1)
+          fi
+
           if [ -n "$APP_DIR" ] && [ -d "$APP_DIR" ]; then
+            echo "Found .app at: $APP_DIR"
             cp -r "$APP_DIR" release-artifacts/Payload/
             cd release-artifacts
             zip -r "tsuzuri_${VERSION}.ipa" Payload
