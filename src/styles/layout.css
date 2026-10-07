@@ -246,27 +246,42 @@
 .toc-item.toc-level-5 { padding-left: 3.0rem; }
 .toc-item.toc-level-6 { padding-left: 3.6rem; }
 
-/* Toast Notifications */
+/* Toast Notifications / Snackbar */
 .toast-notification {
   position: fixed;
-  bottom: calc(1.25rem + var(--safe-area-bottom));
+  bottom: calc(1.5rem + var(--safe-area-bottom, 0px));
   left: 50%;
-  transform: translateX(-50%) translateY(100px);
+  transform: translateX(-50%) translateY(1rem);
+  max-width: min(calc(100vw - 2.5rem), 540px);
+  width: max-content;
+  box-sizing: border-box;
   background-color: var(--text-primary);
   color: var(--bg-canvas);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 500;
-  padding: 0.45rem 1rem;
-  border-radius: 4px;
+  line-height: 1.45;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.12);
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  text-align: center;
   opacity: 0;
   pointer-events: none;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-  z-index: 50;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  z-index: 100;
 }
 
 .toast-notification.visible {
   transform: translateX(-50%) translateY(0);
   opacity: 1;
+  pointer-events: auto;
+}
+
+.toast-notification.toast-error {
+  background-color: #c93b3b;
+  color: #ffffff;
 }
 
 /* Drawer & Bottom Sheet Backdrop */

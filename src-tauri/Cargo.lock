@@ -4180,7 +4180,9 @@ name = "tsuzuri"
 version = "1.0.0"
 dependencies = [
  "base64 0.22.1",
+ "jni",
  "log",
+ "ndk-context",
  "serde",
  "serde_json",
  "tauri",

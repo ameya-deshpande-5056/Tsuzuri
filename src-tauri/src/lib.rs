@@ -17,8 +17,179 @@ pub struct CliState {
     pub file_path: Mutex<Option<String>>,
 }
 
+#[cfg(target_os = "android")]
+fn read_android_content_uri(uri_str: &str) -> Result<DocumentPayload, String> {
+    let ctx = ndk_context::android_context();
+    let vm = unsafe { jni::JavaVM::from_raw(ctx.vm() as _) }
+        .map_err(|e| format!("Failed to get JavaVM: {:?}", e))?;
+    let mut env = vm.attach_current_thread()
+        .map_err(|e| format!("Failed to attach thread: {:?}", e))?;
+    let context_obj = unsafe { jni::objects::JObject::from_raw(ctx.context() as _) };
+
+    let uri_cls = env.find_class("android/net/Uri")
+        .map_err(|e| format!("Find Uri class: {:?}", e))?;
+    let j_uri_str = env.new_string(uri_str)
+        .map_err(|e| format!("New string: {:?}", e))?;
+    let uri_obj = env.call_static_method(
+        uri_cls,
+        "parse",
+        "(Ljava/lang/String;)Landroid/net/Uri;",
+        &[jni::objects::JValue::Object(&j_uri_str)],
+    ).map_err(|e| format!("Uri.parse error: {:?}", e))?.l()
+    .map_err(|e| format!("Uri obj: {:?}", e))?;
+
+    let cr_obj = env.call_method(
+        &context_obj,
+        "getContentResolver",
+        "()Landroid/content/ContentResolver;",
+        &[],
+    ).map_err(|e| format!("getContentResolver: {:?}", e))?.l()
+    .map_err(|e| format!("CR obj: {:?}", e))?;
+
+    let is_obj = env.call_method(
+        &cr_obj,
+        "openInputStream",
+        "(Landroid/net/Uri;)Ljava/io/InputStream;",
+        &[jni::objects::JValue::Object(&uri_obj)],
+    ).map_err(|e| format!("openInputStream: {:?}", e))?.l()
+    .map_err(|e| format!("IS obj: {:?}", e))?;
+
+    if is_obj.is_null() {
+        return Err(format!("Could not open input stream for: {}", uri_str));
+    }
+
+    let mut buffer = Vec::new();
+    let chunk_size = 8192;
+    let byte_arr = env.new_byte_array(chunk_size)
+        .map_err(|e| format!("new_byte_array: {:?}", e))?;
+
+    loop {
+        let read = env.call_method(
+            &is_obj,
+            "read",
+            "([B)I",
+            &[jni::objects::JValue::Object(&byte_arr)],
+        ).map_err(|e| format!("read: {:?}", e))?.i()
+        .map_err(|e| format!("read int: {:?}", e))?;
+
+        if read <= 0 {
+            break;
+        }
+
+        let mut temp = vec![0i8; read as usize];
+        env.get_byte_array_region(&byte_arr, 0, &mut temp)
+            .map_err(|e| format!("get_byte_array_region: {:?}", e))?;
+        buffer.extend(temp.iter().map(|&b| b as u8));
+    }
+
+    let _ = env.call_method(&is_obj, "close", "()V", &[]);
+
+    let content = String::from_utf8(buffer)
+        .map_err(|e| format!("UTF-8 decode error: {:?}", e))?;
+
+    let file_name = uri_str
+        .split('/')
+        .last()
+        .map(|s| s.split('%').next().unwrap_or(s))
+        .unwrap_or("document.md")
+        .to_string();
+
+    Ok(DocumentPayload {
+        path: Some(uri_str.to_string()),
+        file_name,
+        content,
+        directory: None,
+    })
+}
+
+#[cfg(target_os = "android")]
+fn write_android_content_uri(uri_str: &str, content: &str) -> Result<(), String> {
+    let ctx = ndk_context::android_context();
+    let vm = unsafe { jni::JavaVM::from_raw(ctx.vm() as _) }
+        .map_err(|e| format!("Failed to get JavaVM: {:?}", e))?;
+    let mut env = vm.attach_current_thread()
+        .map_err(|e| format!("Failed to attach thread: {:?}", e))?;
+    let context_obj = unsafe { jni::objects::JObject::from_raw(ctx.context() as _) };
+
+    let uri_cls = env.find_class("android/net/Uri")
+        .map_err(|e| format!("Find Uri class: {:?}", e))?;
+    let j_uri_str = env.new_string(uri_str)
+        .map_err(|e| format!("New string: {:?}", e))?;
+    let uri_obj = env.call_static_method(
+        uri_cls,
+        "parse",
+        "(Ljava/lang/String;)Landroid/net/Uri;",
+        &[jni::objects::JValue::Object(&j_uri_str)],
+    ).map_err(|e| format!("Uri.parse error: {:?}", e))?.l()
+    .map_err(|e| format!("Uri obj: {:?}", e))?;
+
+    let cr_obj = env.call_method(
+        &context_obj,
+        "getContentResolver",
+        "()Landroid/content/ContentResolver;",
+        &[],
+    ).map_err(|e| format!("getContentResolver: {:?}", e))?.l()
+    .map_err(|e| format!("CR obj: {:?}", e))?;
+
+    let mode_str = env.new_string("wt")
+        .map_err(|e| format!("New string: {:?}", e))?;
+    let os_res = env.call_method(
+        &cr_obj,
+        "openOutputStream",
+        "(Landroid/net/Uri;Ljava/lang/String;)Ljava/io/OutputStream;",
+        &[jni::objects::JValue::Object(&uri_obj), jni::objects::JValue::Object(&mode_str)],
+    );
+
+    let os_obj = match os_res {
+        Ok(v) => v.l().map_err(|e| format!("OS obj: {:?}", e))?,
+        Err(_) => {
+            env.call_method(
+                &cr_obj,
+                "openOutputStream",
+                "(Landroid/net/Uri;)Ljava/io/OutputStream;",
+                &[jni::objects::JValue::Object(&uri_obj)],
+            ).map_err(|e| format!("openOutputStream fallback: {:?}", e))?.l()
+            .map_err(|e| format!("OS obj fallback: {:?}", e))?
+        }
+    };
+
+    if os_obj.is_null() {
+        return Err(format!("Could not open output stream for: {}", uri_str));
+    }
+
+    let bytes = content.as_bytes();
+    let i8_bytes: Vec<i8> = bytes.iter().map(|&b| b as i8).collect();
+    let j_bytes = env.new_byte_array(bytes.len() as i32)
+        .map_err(|e| format!("new_byte_array: {:?}", e))?;
+    env.set_byte_array_region(&j_bytes, 0, &i8_bytes)
+        .map_err(|e| format!("set_byte_array_region: {:?}", e))?;
+
+    env.call_method(
+        &os_obj,
+        "write",
+        "([B)V",
+        &[jni::objects::JValue::Object(&j_bytes)],
+    ).map_err(|e| format!("write error: {:?}", e))?;
+
+    let _ = env.call_method(&os_obj, "flush", "()V", &[]);
+    let _ = env.call_method(&os_obj, "close", "()V", &[]);
+
+    Ok(())
+}
+
 #[tauri::command]
 fn read_document_file(path: String) -> Result<DocumentPayload, String> {
+    if path.starts_with("content://") {
+        #[cfg(target_os = "android")]
+        {
+            return read_android_content_uri(&path);
+        }
+        #[cfg(not(target_os = "android"))]
+        {
+            return Err(format!("Content URIs are only supported on Android: {}", path));
+        }
+    }
+
     let p = PathBuf::from(&path);
     if !p.exists() {
         return Err(format!("File does not exist: {}", path));
@@ -43,6 +214,17 @@ fn read_document_file(path: String) -> Result<DocumentPayload, String> {
 
 #[tauri::command]
 fn write_document_file(path: String, content: String) -> Result<(), String> {
+    if path.starts_with("content://") {
+        #[cfg(target_os = "android")]
+        {
+            return write_android_content_uri(&path, &content);
+        }
+        #[cfg(not(target_os = "android"))]
+        {
+            return Err(format!("Content URIs are only supported on Android: {}", path));
+        }
+    }
+
     let p = PathBuf::from(&path);
     if let Some(parent) = p.parent() {
         if !parent.exists() {

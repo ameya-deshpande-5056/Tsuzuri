@@ -8,10 +8,36 @@ export interface DocumentPayload {
 }
 
 export async function readDocumentFile(path: string): Promise<DocumentPayload> {
+  const bridge = (window as any).TsuzuriBridge;
+  if (path.startsWith("content://") && bridge && typeof bridge.readDocument === "function") {
+    try {
+      const raw = bridge.readDocument(path);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return {
+          path: parsed.uri || path,
+          file_name: parsed.fileName || "document.md",
+          content: parsed.content || "",
+          directory: null,
+        };
+      }
+    } catch (err) {
+      console.warn("TsuzuriBridge.readDocument error:", err);
+    }
+  }
   return await invoke<DocumentPayload>("read_document_file", { path });
 }
 
 export async function writeDocumentFile(path: string, content: string): Promise<void> {
+  const bridge = (window as any).TsuzuriBridge;
+  if (path.startsWith("content://") && bridge && typeof bridge.saveDocument === "function") {
+    try {
+      const ok = bridge.saveDocument(path, content);
+      if (ok) return;
+    } catch (err) {
+      console.warn("TsuzuriBridge.saveDocument error:", err);
+    }
+  }
   return await invoke<void>("write_document_file", { path, content });
 }
 

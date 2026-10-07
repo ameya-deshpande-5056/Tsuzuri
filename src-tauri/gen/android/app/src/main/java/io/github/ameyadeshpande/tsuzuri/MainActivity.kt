@@ -68,23 +68,41 @@ class MainActivity : TauriActivity() {
     }
   }
 
-  private fun readUriAndDispatch(uri: Uri) {
-    try {
-      try {
-        val flags = intent.flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-        contentResolver.takePersistableUriPermission(uri, flags)
-      } catch (_: Exception) {}
+  private fun readContentFromUri(uri: Uri): Pair<String, String>? {
+    return try {
+      if (uri.scheme == "content") {
+        try {
+          val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+          contentResolver.takePersistableUriPermission(uri, flags)
+        } catch (_: Exception) {}
 
-      val fileName = resolveFileName(uri)
-      val content = contentResolver.openInputStream(uri)?.use { stream ->
-        stream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-      } ?: return
-
-      pendingDoc = PendingDocument(fileName, content, uri.toString())
-      dispatchPendingDocument()
+        val fileName = resolveFileName(uri)
+        val content = contentResolver.openInputStream(uri)?.use { stream ->
+          stream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+        } ?: return null
+        Pair(fileName, content)
+      } else if (uri.scheme == "file" || uri.scheme == null) {
+        val path = uri.path ?: uri.toString()
+        val file = java.io.File(path)
+        if (file.exists()) {
+          val content = file.readText(Charsets.UTF_8)
+          Pair(file.name, content)
+        } else {
+          null
+        }
+      } else {
+        null
+      }
     } catch (e: Exception) {
       e.printStackTrace()
+      null
     }
+  }
+
+  private fun readUriAndDispatch(uri: Uri) {
+    val result = readContentFromUri(uri) ?: return
+    pendingDoc = PendingDocument(result.first, result.second, uri.toString())
+    dispatchPendingDocument()
   }
 
   private fun resolveFileName(uri: Uri): String {
@@ -104,7 +122,13 @@ class MainActivity : TauriActivity() {
     if (name.isNullOrBlank()) {
       name = uri.lastPathSegment
     }
-    return name ?: "document.md"
+    if (!name.isNullOrBlank()) {
+      name = Uri.decode(name)
+      if (name.contains('/')) {
+        name = name.substringAfterLast('/')
+      }
+    }
+    return if (!name.isNullOrBlank()) name else "document.md"
   }
 
   private fun dispatchPendingDocument() {
@@ -144,6 +168,7 @@ class MainActivity : TauriActivity() {
       @JavascriptInterface
       fun getPendingDocument(): String? {
         val doc = pendingDoc ?: return null
+        pendingDoc = null
         return JSONObject().apply {
           put("fileName", doc.fileName)
           put("content", doc.content)
@@ -152,13 +177,39 @@ class MainActivity : TauriActivity() {
       }
 
       @JavascriptInterface
+      fun readDocument(uriString: String): String? {
+        val uri = Uri.parse(uriString)
+        val result = readContentFromUri(uri) ?: return null
+        return JSONObject().apply {
+          put("fileName", result.first)
+          put("content", result.second)
+          put("uri", uriString)
+        }.toString()
+      }
+
+      @JavascriptInterface
       fun saveDocument(uriString: String, content: String): Boolean {
         return try {
           val uri = Uri.parse(uriString)
-          contentResolver.openOutputStream(uri, "wt")?.use { stream ->
-            stream.bufferedWriter(Charsets.UTF_8).use { it.write(content) }
+          if (uri.scheme == "content") {
+            val stream = try {
+              contentResolver.openOutputStream(uri, "wt")
+            } catch (_: Exception) {
+              contentResolver.openOutputStream(uri)
+            }
+            stream?.use { s ->
+              s.bufferedWriter(Charsets.UTF_8).use { it.write(content) }
+            }
+            stream != null
+          } else if (uri.scheme == "file" || uri.scheme == null) {
+            val path = uri.path ?: uriString
+            val file = java.io.File(path)
+            file.parentFile?.mkdirs()
+            file.writeText(content, Charsets.UTF_8)
+            true
+          } else {
+            false
           }
-          true
         } catch (e: Exception) {
           e.printStackTrace()
           false

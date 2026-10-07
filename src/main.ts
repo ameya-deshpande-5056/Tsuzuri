@@ -69,6 +69,8 @@ class TsuzuriApp {
   private editorCursorPos!: HTMLElement;
   private editorStats!: HTMLElement;
 
+  private toastTimeout: number | null = null;
+
   constructor() {
     this.state = createInitialState();
   }
@@ -450,7 +452,8 @@ class TsuzuriApp {
       }
     } catch (err) {
       console.error("Open file error:", err);
-      this.showToast(`Error opening file: ${err}`);
+      const msg = err instanceof Error ? err.message : String(err);
+      this.showToast(`Error opening file: ${msg}`, true);
     }
   }
 
@@ -474,7 +477,9 @@ class TsuzuriApp {
       this.showToast(`Opened ${doc.file_name}`);
     } catch (err) {
       console.error("Load document error:", err);
-      this.showToast(`Failed to open: ${err}`);
+      const raw = err instanceof Error ? err.message : String(err);
+      const msg = raw.length > 100 ? `${raw.slice(0, 97)}...` : raw;
+      this.showToast(`Failed to open: ${msg}`, true);
     }
   }
 
@@ -510,7 +515,8 @@ class TsuzuriApp {
         targetPath = picked;
       } catch (err) {
         console.error("Save picker error:", err);
-        this.showToast(`Save canceled: ${err}`);
+        const msg = err instanceof Error ? err.message : String(err);
+        this.showToast(`Save canceled: ${msg}`, true);
         return;
       }
     }
@@ -530,7 +536,8 @@ class TsuzuriApp {
       this.showToast(`Saved ${fileName}`);
     } catch (err) {
       console.error("Save error:", err);
-      this.showToast(`Save failed: ${err}`);
+      const msg = err instanceof Error ? err.message : String(err);
+      this.showToast(`Save failed: ${msg}`, true);
     }
   }
 
@@ -675,12 +682,26 @@ class TsuzuriApp {
     }
   }
 
-  private showToast(msg: string): void {
+  private showToast(msg: string, isError: boolean = false): void {
+    if (this.toastTimeout !== null) {
+      window.clearTimeout(this.toastTimeout);
+      this.toastTimeout = null;
+    }
+
     this.toastEl.textContent = msg;
+    if (isError) {
+      this.toastEl.classList.add("toast-error");
+    } else {
+      this.toastEl.classList.remove("toast-error");
+    }
+
     this.toastEl.classList.add("visible");
-    setTimeout(() => {
+    const duration = isError ? 4000 : 2400;
+    this.toastTimeout = window.setTimeout(() => {
       this.toastEl.classList.remove("visible");
-    }, 2400);
+      this.toastEl.classList.remove("toast-error");
+      this.toastTimeout = null;
+    }, duration);
   }
 }
 
