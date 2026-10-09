@@ -20,7 +20,7 @@ import {
 describe("Zoom Management System", () => {
   beforeEach(() => {
     localStorage.clear();
-    document.body.innerHTML = '<div class="view-pane" id="reader-view"></div><div class="view-pane" id="editor-view"></div>';
+    document.body.innerHTML = '<div class="view-pane" id="reader-view"></div><div class="view-pane" id="editor-view"></div><nav class="toc-list" id="toc-list"></nav>';
     document.documentElement.style.zoom = "";
   });
 
@@ -40,13 +40,14 @@ describe("Zoom Management System", () => {
     expect(formatZoom(2.0)).toBe("200%");
   });
 
-  it("sets zoom and applies style to view-panes and persists to localStorage", () => {
+  it("sets zoom and applies style to view-panes and TOC and persists to localStorage", () => {
     const val = setZoom(1.3);
     expect(val).toBe(1.3);
     expect(getZoom()).toBe(1.3);
     expect(document.documentElement.style.getPropertyValue("--app-zoom")).toBe("1.3");
     expect(document.getElementById("reader-view")?.style.zoom).toBe("1.3");
     expect(document.getElementById("editor-view")?.style.zoom).toBe("1.3");
+    expect(document.getElementById("toc-list")?.style.zoom).toBe("1.3");
     expect(localStorage.getItem(ZOOM_STORAGE_KEY)).toBe("1.3");
   });
 

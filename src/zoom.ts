@@ -36,11 +36,20 @@ export function applyZoomToDom(zoom: number): void {
       document.body.style.height = "100%";
     }
 
-    // Apply zoom directly to the content view panes (reader and editor)
+    // Apply zoom directly to the content view panes (reader and editor) and table of contents
     const viewPanes = document.querySelectorAll<HTMLElement>(".view-pane");
     viewPanes.forEach((pane) => {
       pane.style.zoom = String(currentZoom);
     });
+
+    const tocList = document.getElementById("toc-list");
+    if (tocList) {
+      tocList.style.zoom = String(currentZoom);
+    }
+    const tocHeading = document.querySelector<HTMLElement>(".toc-heading");
+    if (tocHeading) {
+      tocHeading.style.zoom = String(currentZoom);
+    }
 
     try {
       localStorage.setItem(ZOOM_STORAGE_KEY, String(currentZoom));

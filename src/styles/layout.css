@@ -201,7 +201,7 @@
   position: absolute;
   top: 0;
   right: 0;
-  width: 290px;
+  width: min(calc(290px * max(1, var(--app-zoom, 1))), 85vw);
   max-width: 85vw;
   height: 100%;
   background-color: var(--bg-surface);
@@ -237,6 +237,7 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-muted);
+  zoom: var(--app-zoom, 1);
 }
 
 .close-toc-btn {
@@ -251,6 +252,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  zoom: var(--app-zoom, 1);
 }
 
 .toc-empty {
