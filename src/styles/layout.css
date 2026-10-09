@@ -14,8 +14,8 @@
 
 /* Minimalist App Header */
 .app-header {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
   box-sizing: content-box;
   height: 44px;
@@ -34,9 +34,9 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex: 1;
   min-width: 0;
   overflow: hidden;
-  justify-self: start;
 }
 
 .app-name {
@@ -73,45 +73,13 @@
   flex-shrink: 0;
 }
 
-/* Center Segmented View Switcher (Editor ↔ Reader) */
+/* Header Center Hidden - Switcher moved to More Actions menu */
 .header-center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  justify-self: center;
+  display: none !important;
 }
 
 .view-switcher {
-  display: inline-flex;
-  align-items: center;
-  background-color: var(--bg-subtle);
-  border: 1px solid var(--border-default);
-  border-radius: 4px;
-  padding: 2px;
-  gap: 2px;
-}
-
-.view-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.78rem;
-  font-weight: 500;
-  line-height: 1;
-  padding: 0.28rem 0.75rem;
-  border-radius: 3px;
-  color: var(--text-secondary);
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.view-btn:hover {
-  color: var(--text-primary);
-}
-
-.view-btn.active {
-  background-color: var(--bg-surface);
-  color: var(--text-primary);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  display: none !important;
 }
 
 /* Right Tool Actions */
@@ -120,39 +88,36 @@
   align-items: center;
   justify-content: flex-end;
   gap: 0.35rem;
-  justify-self: end;
+  flex-shrink: 0;
 }
 
 .tool-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  font-family: var(--font-sans);
-  font-size: 0.78rem;
-  line-height: 1;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 6px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-default);
   color: var(--text-secondary);
-  height: 28px;
-  padding: 0 0.55rem;
-  border-radius: 3px;
-  border: 1px solid transparent;
+  cursor: pointer;
   box-sizing: border-box;
   vertical-align: middle;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  user-select: none;
 }
 
 .tool-btn svg {
   display: block;
   flex-shrink: 0;
-  width: 15px;
-  height: 15px;
+  width: 18px;
+  height: 18px;
 }
 
 .tool-btn .btn-label {
-  display: inline-flex;
-  align-items: center;
-  line-height: 1;
-  transform: translateY(1.5px);
+  display: none !important;
 }
 
 .tool-btn:hover {
@@ -487,7 +452,142 @@
   transform: scale(0.96);
 }
 
-/* Zoom Controls in Mobile Sheet & Header */
+/* Menu Shortcut Badges */
+.menu-shortcut-badge {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-family: var(--font-sans);
+  color: var(--text-muted);
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-default);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* Chrome & Firefox Style Zoom Controls (Minus, Slider, Plus, Percent) */
+.menu-zoom-row,
+.sheet-zoom-control {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.35rem 0.55rem;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.menu-zoom-btn,
+.sheet-zoom-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+}
+
+.menu-zoom-btn svg,
+.sheet-zoom-btn svg {
+  display: block;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.menu-zoom-btn:hover,
+.sheet-zoom-btn:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.menu-zoom-btn:active,
+.sheet-zoom-btn:active {
+  background-color: var(--border-default);
+  transform: scale(0.92);
+}
+
+.menu-zoom-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  min-width: 60px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-strong);
+  outline: none;
+  cursor: pointer;
+  margin: 0 4px;
+}
+
+.menu-zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.menu-zoom-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.menu-zoom-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
+.menu-zoom-val-btn,
+.sheet-zoom-value-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 28px;
+  padding: 0 0.4rem;
+  border-radius: 6px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  font-size: 0.76rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.menu-zoom-val-btn:hover,
+.sheet-zoom-value-btn:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-focus);
+}
+
+.menu-zoom-val-btn:active,
+.sheet-zoom-value-btn:active {
+  transform: scale(0.94);
+}
+
 .zoom-indicator-btn {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
@@ -495,58 +595,91 @@
   border-color: var(--border-focus);
 }
 
-.sheet-zoom-control {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 0.5rem;
-  align-items: center;
-}
+/* Desktop Actions Menu (Dropdown popover below More button, like Chrome/Firefox) */
+@media (min-width: 681px) {
+  .drawer-backdrop {
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
 
-.sheet-zoom-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  height: 44px;
-  border-radius: 8px;
-  background-color: var(--bg-subtle);
-  border: 1px solid var(--border-default);
-  color: var(--text-primary);
-  font-size: 0.82rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.1s ease;
-}
+  .mobile-sheet {
+    position: fixed;
+    top: calc(44px + 6px);
+    right: 12px;
+    bottom: auto;
+    left: auto;
+    width: 290px;
+    max-height: calc(100vh - 64px);
+    max-height: calc(100dvh - 64px);
+    border-radius: 10px;
+    border: 1px solid var(--border-default);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--border-default);
+    padding-bottom: 0.75rem;
+    transform: translateY(-8px) scale(0.96);
+    transform-origin: top right;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 40;
+  }
 
-.sheet-zoom-btn svg {
-  display: block;
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-}
+  .mobile-sheet.open {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+  }
 
-.sheet-zoom-btn span {
-  display: inline-flex;
-  align-items: center;
-  line-height: 1;
-  transform: translateY(1.5px);
-}
+  .sheet-handle-bar {
+    display: none !important;
+  }
 
-.sheet-zoom-btn:hover {
-  background-color: var(--bg-hover);
-}
+  .sheet-header {
+    padding: 0.5rem 0.85rem;
+    border-bottom: 1px solid var(--border-default);
+  }
 
-.sheet-zoom-btn:active {
-  background-color: var(--border-default);
-  transform: scale(0.97);
-}
+  .sheet-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
 
-.sheet-zoom-value-btn {
-  min-width: 60px;
-  padding: 0 0.85rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-primary);
+  .sheet-body {
+    padding: 0.65rem 0.85rem;
+    gap: 0.75rem;
+  }
+
+  .sheet-actions {
+    gap: 0.25rem;
+  }
+
+  .sheet-action-item {
+    height: 38px;
+    font-size: 0.84rem;
+    padding: 0 0.75rem;
+    border-radius: 6px;
+    background-color: transparent;
+    border: 1px solid transparent;
+  }
+
+  .sheet-action-item:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  .sheet-action-item:active {
+    background-color: var(--border-default);
+    transform: none;
+  }
+
+  .sheet-theme-switcher {
+    gap: 0.4rem;
+  }
+
+  .sheet-theme-btn {
+    height: 44px;
+    font-size: 0.72rem;
+  }
 }
 
 /* Visibility Utilities */

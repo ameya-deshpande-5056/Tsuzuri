@@ -19,6 +19,7 @@ import {
 import {
   initZoom,
   getZoom,
+  setZoom,
   zoomIn,
   zoomOut,
   resetZoom,
@@ -37,13 +38,13 @@ class TsuzuriApp {
   private editorView!: HTMLElement;
   private markdownTextarea!: HTMLTextAreaElement;
   private lineGutter!: HTMLElement;
-  private btnViewReader!: HTMLButtonElement;
-  private btnViewEditor!: HTMLButtonElement;
+  private btnViewReader!: HTMLButtonElement | null;
+  private btnViewEditor!: HTMLButtonElement | null;
   private btnToc!: HTMLButtonElement;
-  private btnOpen!: HTMLButtonElement;
+  private btnOpen!: HTMLButtonElement | null;
   private btnSave!: HTMLButtonElement;
-  private btnTheme!: HTMLButtonElement;
-  private themeLabel!: HTMLElement;
+  private btnTheme!: HTMLButtonElement | null;
+  private themeLabel!: HTMLElement | null;
   private docTitleEl!: HTMLElement;
   private dirtyIndicatorEl!: HTMLElement;
   private tocDrawer!: HTMLElement;
@@ -58,6 +59,7 @@ class TsuzuriApp {
   private sheetBtnZoomOut!: HTMLButtonElement | null;
   private sheetBtnZoomReset!: HTMLButtonElement | null;
   private sheetZoomValue!: HTMLElement | null;
+  private menuZoomSlider!: HTMLInputElement | null;
 
   // Mobile Sheet & Backdrop Elements
   private btnMore!: HTMLButtonElement;
@@ -130,13 +132,13 @@ class TsuzuriApp {
     this.editorView = document.getElementById("editor-view") as HTMLElement;
     this.markdownTextarea = document.getElementById("markdown-textarea") as HTMLTextAreaElement;
     this.lineGutter = document.getElementById("line-gutter") as HTMLElement;
-    this.btnViewReader = document.getElementById("btn-view-reader") as HTMLButtonElement;
-    this.btnViewEditor = document.getElementById("btn-view-editor") as HTMLButtonElement;
+    this.btnViewReader = document.getElementById("btn-view-reader") as HTMLButtonElement | null;
+    this.btnViewEditor = document.getElementById("btn-view-editor") as HTMLButtonElement | null;
     this.btnToc = document.getElementById("btn-toc") as HTMLButtonElement;
-    this.btnOpen = document.getElementById("btn-open") as HTMLButtonElement;
+    this.btnOpen = document.getElementById("btn-open") as HTMLButtonElement | null;
     this.btnSave = document.getElementById("btn-save") as HTMLButtonElement;
-    this.btnTheme = document.getElementById("btn-theme") as HTMLButtonElement;
-    this.themeLabel = document.getElementById("theme-label") as HTMLElement;
+    this.btnTheme = document.getElementById("btn-theme") as HTMLButtonElement | null;
+    this.themeLabel = document.getElementById("theme-label") as HTMLElement | null;
     this.docTitleEl = document.getElementById("doc-title") as HTMLElement;
     this.dirtyIndicatorEl = document.getElementById("dirty-indicator") as HTMLElement;
     this.tocDrawer = document.getElementById("toc-drawer") as HTMLElement;
@@ -150,6 +152,7 @@ class TsuzuriApp {
     this.sheetBtnZoomOut = document.getElementById("sheet-btn-zoom-out") as HTMLButtonElement | null;
     this.sheetBtnZoomReset = document.getElementById("sheet-btn-zoom-reset") as HTMLButtonElement | null;
     this.sheetZoomValue = document.getElementById("sheet-zoom-value") as HTMLElement | null;
+    this.menuZoomSlider = document.getElementById("menu-zoom-slider") as HTMLInputElement | null;
 
     this.btnMore = document.getElementById("btn-more") as HTMLButtonElement;
     this.mobileSheet = document.getElementById("mobile-sheet") as HTMLElement;
@@ -216,6 +219,9 @@ class TsuzuriApp {
     const formatted = formatZoom(zoom);
     if (this.sheetZoomValue) {
       this.sheetZoomValue.textContent = formatted;
+    }
+    if (this.menuZoomSlider) {
+      this.menuZoomSlider.value = String(Math.round(zoom * 100));
     }
     if (this.btnZoomReset && this.headerZoomValue) {
       if (Math.abs(zoom - 1.0) > 0.01) {
@@ -338,8 +344,8 @@ class TsuzuriApp {
 
   private bindEvents(): void {
     // View Switcher (Editor ↔ Reader)
-    this.btnViewReader.addEventListener("click", () => this.switchView("reader"));
-    this.btnViewEditor.addEventListener("click", () => this.switchView("editor"));
+    this.btnViewReader?.addEventListener("click", () => this.switchView("reader"));
+    this.btnViewEditor?.addEventListener("click", () => this.switchView("editor"));
 
     // Document Title Tooltip & Path Info
     this.docTitleEl.addEventListener("mouseenter", () => this.updateDocTitleTooltip());
@@ -351,11 +357,11 @@ class TsuzuriApp {
     window.addEventListener("resize", () => this.updateDocTitleTooltip());
 
     // File operations
-    this.btnOpen.addEventListener("click", () => this.handleOpenFile());
+    this.btnOpen?.addEventListener("click", () => this.handleOpenFile());
     this.btnSave.addEventListener("click", () => this.handleSaveFile(false));
 
     // Theme toggle
-    this.btnTheme.addEventListener("click", () => this.cycleTheme());
+    this.btnTheme?.addEventListener("click", () => this.cycleTheme());
 
     // TOC toggle
     this.btnToc.addEventListener("click", () => {
@@ -394,8 +400,14 @@ class TsuzuriApp {
     this.btnReplaceOne.addEventListener("click", () => this.replaceOne());
     this.btnReplaceAll.addEventListener("click", () => this.replaceAll());
 
-    // Mobile Actions Sheet & Backdrop
-    this.btnMore.addEventListener("click", () => this.openMobileSheet());
+    // Actions Menu (Bottom Sheet on mobile, Popover on desktop) & Backdrop
+    this.btnMore.addEventListener("click", () => {
+      if (this.isMobileSheetOpen) {
+        this.closeMobileSheet();
+      } else {
+        this.openMobileSheet();
+      }
+    });
     this.btnCloseSheet.addEventListener("click", () => this.closeMobileSheet());
     this.drawerBackdrop.addEventListener("click", () => {
       this.closeMobileSheet();
@@ -452,6 +464,15 @@ class TsuzuriApp {
       this.sheetBtnZoomReset.addEventListener("click", () => {
         resetZoom();
         this.showToast("Zoom: 100% (Reset)");
+      });
+    }
+
+    if (this.menuZoomSlider) {
+      this.menuZoomSlider.addEventListener("input", () => {
+        const val = parseFloat(this.menuZoomSlider!.value);
+        if (!isNaN(val)) {
+          setZoom(val / 100);
+        }
       });
     }
 
@@ -625,10 +646,10 @@ class TsuzuriApp {
       // 1. Immediately toggle DOM visibility so switch is instantaneous without delay
       this.editorView.style.display = "none";
       this.readerView.style.display = "flex";
-      this.btnViewReader.classList.add("active");
-      this.btnViewEditor.classList.remove("active");
-      this.btnViewReader.setAttribute("aria-selected", "true");
-      this.btnViewEditor.setAttribute("aria-selected", "false");
+      this.btnViewReader?.classList.add("active");
+      this.btnViewEditor?.classList.remove("active");
+      this.btnViewReader?.setAttribute("aria-selected", "true");
+      this.btnViewEditor?.setAttribute("aria-selected", "false");
       this.btnToc.style.display = "inline-flex";
       this.closeFindBar();
       this.readerView.focus();
@@ -642,10 +663,10 @@ class TsuzuriApp {
       // 1. Immediately reveal editor view
       this.readerView.style.display = "none";
       this.editorView.style.display = "flex";
-      this.btnViewEditor.classList.add("active");
-      this.btnViewReader.classList.remove("active");
-      this.btnViewEditor.setAttribute("aria-selected", "true");
-      this.btnViewReader.setAttribute("aria-selected", "false");
+      this.btnViewEditor?.classList.add("active");
+      this.btnViewReader?.classList.remove("active");
+      this.btnViewEditor?.setAttribute("aria-selected", "true");
+      this.btnViewReader?.setAttribute("aria-selected", "false");
       this.btnToc.style.display = "none";
       this.nav.closeToc();
 

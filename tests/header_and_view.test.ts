@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import fs from "fs";
 
 describe("Header Layout, Tooltip & View Switch Polishing", () => {
   let header: HTMLElement;
@@ -128,7 +129,6 @@ describe("Header Layout, Tooltip & View Switch Polishing", () => {
   });
 
   it("ensures print functionality is completely removed and header buttons are cleanly structured", () => {
-    const fs = require("fs");
     const indexHtml = fs.readFileSync("/home/ameya/Tsuzuri/index.html", "utf-8");
     const mainTs = fs.readFileSync("/home/ameya/Tsuzuri/src/main.ts", "utf-8");
 
@@ -144,7 +144,6 @@ describe("Header Layout, Tooltip & View Switch Polishing", () => {
   });
 
   it("provides Google Docs style view toggle in mobile sheet with dynamic label and icon", () => {
-    const fs = require("fs");
     const indexHtml = fs.readFileSync("/home/ameya/Tsuzuri/index.html", "utf-8");
     const mainTs = fs.readFileSync("/home/ameya/Tsuzuri/src/main.ts", "utf-8");
     const layoutCss = fs.readFileSync("/home/ameya/Tsuzuri/src/styles/layout.css", "utf-8");
@@ -166,7 +165,6 @@ describe("Header Layout, Tooltip & View Switch Polishing", () => {
   });
 
   it("provides zoom controls in mobile sheet and header indicator with shortcuts", () => {
-    const fs = require("fs");
     const indexHtml = fs.readFileSync("/home/ameya/Tsuzuri/index.html", "utf-8");
     const mainTs = fs.readFileSync("/home/ameya/Tsuzuri/src/main.ts", "utf-8");
     const layoutCss = fs.readFileSync("/home/ameya/Tsuzuri/src/styles/layout.css", "utf-8");
@@ -178,6 +176,7 @@ describe("Header Layout, Tooltip & View Switch Polishing", () => {
     expect(indexHtml).toContain('id="sheet-btn-zoom-out"');
     expect(indexHtml).toContain('id="sheet-btn-zoom-reset"');
     expect(indexHtml).toContain('id="sheet-zoom-value"');
+    expect(indexHtml).toContain('id="menu-zoom-slider"');
 
     // Immediate zoom pre-paint script in head
     expect(indexHtml).toContain('localStorage.getItem("tsuzuri_zoom")');
@@ -186,12 +185,43 @@ describe("Header Layout, Tooltip & View Switch Polishing", () => {
     expect(layoutCss).toContain(".sheet-zoom-control");
     expect(layoutCss).toContain(".sheet-zoom-btn");
     expect(layoutCss).toContain(".zoom-indicator-btn");
+    expect(layoutCss).toContain(".menu-zoom-slider");
+    expect(layoutCss).toContain(".menu-zoom-row");
 
     // Zoom logic and shortcuts in main.ts
     expect(mainTs).toContain("initZoomSystem");
     expect(mainTs).toContain("bindWheelZoom");
     expect(mainTs).toContain("sheetBtnZoomIn");
     expect(mainTs).toContain("btnZoomReset");
+    expect(mainTs).toContain("menuZoomSlider");
+  });
+
+  it("configures unified 3-button header across desktop and mobile, with desktop popover menu", () => {
+    const indexHtml = fs.readFileSync("/home/ameya/Tsuzuri/index.html", "utf-8");
+    const layoutCss = fs.readFileSync("/home/ameya/Tsuzuri/src/styles/layout.css", "utf-8");
+    const mainTs = fs.readFileSync("/home/ameya/Tsuzuri/src/main.ts", "utf-8");
+
+    // Header has TOC, Save, and More buttons
+    expect(indexHtml).toContain('id="btn-toc"');
+    expect(indexHtml).toContain('id="btn-save"');
+    expect(indexHtml).toContain('id="btn-more"');
+
+    // Header buttons have .btn-label hidden globally
+    expect(layoutCss).toMatch(/\.tool-btn\s+\.btn-label\s*\{[^}]*display:\s*none\s*!important/);
+
+    // Header-center and view-switcher hidden
+    expect(layoutCss).toMatch(/\.header-center\s*\{[^}]*display:\s*none\s*!important/);
+    expect(layoutCss).toMatch(/\.view-switcher\s*\{[^}]*display:\s*none\s*!important/);
+
+    // Desktop popover menu styling (min-width: 681px)
+    expect(layoutCss).toContain("@media (min-width: 681px)");
+    expect(layoutCss).toContain("width: 290px;");
+    expect(layoutCss).toContain("background-color: transparent !important;");
+
+    // More button toggles menu open/close
+    expect(mainTs).toContain("this.isMobileSheetOpen");
+    expect(mainTs).toContain("this.closeMobileSheet()");
+    expect(mainTs).toContain("this.openMobileSheet()");
   });
 });
 
