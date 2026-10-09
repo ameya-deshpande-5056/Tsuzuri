@@ -159,6 +159,9 @@ class MainActivity : TauriActivity() {
     super.onWebViewCreate(webView)
     activeWebView = webView
 
+    val isNight = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+    webView.setBackgroundColor(if (isNight) android.graphics.Color.BLACK else android.graphics.Color.parseColor("#fcfcfc"))
+
     val bridge = object {
       @JavascriptInterface
       fun getInsets(): String {

@@ -46,7 +46,8 @@
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
 
-[data-theme="dark"] {
+[data-theme="dark"],
+:root.dark {
   color-scheme: dark;
 
   /* True AMOLED Pure Black Surfaces */
@@ -79,6 +80,58 @@
   --table-alt: #050507;
   --blockquote-border: #3f3f46;
   --shadow-drawer: 0 4px 28px rgba(0, 0, 0, 0.65);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    /* True AMOLED Pure Black Surfaces */
+    --bg-canvas: #000000;
+    --bg-surface: #040404;
+    --bg-subtle: #0d0d0f;
+    --bg-hover: #16161a;
+
+    /* High contrast restrained borders */
+    --border-default: #1c1c20;
+    --border-strong: #2c2c32;
+    --border-focus: #52525b;
+
+    /* Readable high-contrast AMOLED text */
+    --text-primary: #f4f4f5;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+    --text-faint: #52525b;
+
+    /* Accents */
+    --accent-primary: #f4f4f5;
+    --accent-contrast: #000000;
+    --link-color: #58a6ff;
+    --danger-color: #ef4444;
+
+    /* Components */
+    --code-bg: #08080a;
+    --code-border: #1a1a1e;
+    --table-border: #222226;
+    --table-alt: #050507;
+    --blockquote-border: #3f3f46;
+    --shadow-drawer: 0 4px 28px rgba(0, 0, 0, 0.65);
+  }
+
+  html:not([data-theme="light"]),
+  html:not([data-theme="light"]) body {
+    background-color: #000000;
+    color: #f4f4f5;
+  }
+}
+
+/* Explicit dark canvas styles for immediate paint */
+html[data-theme="dark"],
+html.dark,
+html[data-theme="dark"] body,
+html.dark body {
+  background-color: #000000;
+  color: #f4f4f5;
 }
 
 /* Document & Viewport Reset */

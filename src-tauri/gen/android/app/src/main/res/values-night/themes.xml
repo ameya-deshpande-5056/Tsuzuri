@@ -2,5 +2,7 @@
     <!-- Base application theme. -->
     <style name="Theme.tsuzuri" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your theme here. -->
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:colorBackground">@android:color/black</item>
     </style>
 </resources>
