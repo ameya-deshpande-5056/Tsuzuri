@@ -29,6 +29,7 @@ A quiet, lightweight, and offline Markdown document reader and editor.
 Tsuzuri is designed as a **reader-first** document utility. When reading, all visual noise recedes so you can focus entirely on the text, mathematics, diagrams, and code.
 
 - **Editor ↔ Reader**: Press \`Ctrl+E\` (or \`Cmd+E\` on macOS) to switch between the raw editor and the typeset reader.
+- **Zoom In / Out**: Press \`Ctrl+=\` / \`Ctrl+-\` (or \`Ctrl+Scroll\`) to scale the entire interface, \`Ctrl+0\` to reset.
 - **Open file**: Press \`Ctrl+O\`
 - **Save document**: Press \`Ctrl+S\`
 - **Search & Replace**: Press \`Ctrl+F\` or \`Ctrl+H\`

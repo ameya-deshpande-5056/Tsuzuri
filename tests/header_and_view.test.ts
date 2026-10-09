@@ -142,5 +142,56 @@ describe("Header Layout, Tooltip & View Switch Polishing", () => {
     expect(mainTs).not.toContain("sheetBtnPrint");
     expect(mainTs).not.toContain("printDocument");
   });
+
+  it("provides Google Docs style view toggle in mobile sheet with dynamic label and icon", () => {
+    const fs = require("fs");
+    const indexHtml = fs.readFileSync("/home/ameya/Tsuzuri/index.html", "utf-8");
+    const mainTs = fs.readFileSync("/home/ameya/Tsuzuri/src/main.ts", "utf-8");
+    const layoutCss = fs.readFileSync("/home/ameya/Tsuzuri/src/styles/layout.css", "utf-8");
+
+    // Elements present in index.html
+    expect(indexHtml).toContain('id="sheet-btn-view-mode"');
+    expect(indexHtml).toContain('id="sheet-view-label"');
+    expect(indexHtml).toContain('id="sheet-view-icon"');
+
+    // Layout CSS hides header-center on mobile
+    expect(layoutCss).toContain(".header-center");
+    expect(layoutCss).toMatch(/@media\s*\(max-width:\s*768px\)[^{]*\{[\s\S]*\.header-center\s*\{[^}]*display:\s*none\s*!important/);
+
+    // main.ts manages mobile view toggle display
+    expect(mainTs).toContain("sheetBtnViewMode");
+    expect(mainTs).toContain("updateMobileViewToggleDisplay");
+    expect(mainTs).toContain("Edit Document");
+    expect(mainTs).toContain("Reader View");
+  });
+
+  it("provides zoom controls in mobile sheet and header indicator with shortcuts", () => {
+    const fs = require("fs");
+    const indexHtml = fs.readFileSync("/home/ameya/Tsuzuri/index.html", "utf-8");
+    const mainTs = fs.readFileSync("/home/ameya/Tsuzuri/src/main.ts", "utf-8");
+    const layoutCss = fs.readFileSync("/home/ameya/Tsuzuri/src/styles/layout.css", "utf-8");
+
+    // Zoom controls in index.html
+    expect(indexHtml).toContain('id="btn-zoom-reset"');
+    expect(indexHtml).toContain('id="header-zoom-value"');
+    expect(indexHtml).toContain('id="sheet-btn-zoom-in"');
+    expect(indexHtml).toContain('id="sheet-btn-zoom-out"');
+    expect(indexHtml).toContain('id="sheet-btn-zoom-reset"');
+    expect(indexHtml).toContain('id="sheet-zoom-value"');
+
+    // Immediate zoom pre-paint script in head
+    expect(indexHtml).toContain('localStorage.getItem("tsuzuri_zoom")');
+
+    // Layout styles
+    expect(layoutCss).toContain(".sheet-zoom-control");
+    expect(layoutCss).toContain(".sheet-zoom-btn");
+    expect(layoutCss).toContain(".zoom-indicator-btn");
+
+    // Zoom logic and shortcuts in main.ts
+    expect(mainTs).toContain("initZoomSystem");
+    expect(mainTs).toContain("bindWheelZoom");
+    expect(mainTs).toContain("sheetBtnZoomIn");
+    expect(mainTs).toContain("btnZoomReset");
+  });
 });
 

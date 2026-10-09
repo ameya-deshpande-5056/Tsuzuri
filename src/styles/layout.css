@@ -487,6 +487,68 @@
   transform: scale(0.96);
 }
 
+/* Zoom Controls in Mobile Sheet & Header */
+.zoom-indicator-btn {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--accent-primary);
+  border-color: var(--border-focus);
+}
+
+.sheet-zoom-control {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.sheet-zoom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 44px;
+  border-radius: 8px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.sheet-zoom-btn svg {
+  display: block;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.sheet-zoom-btn span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  transform: translateY(1.5px);
+}
+
+.sheet-zoom-btn:hover {
+  background-color: var(--bg-hover);
+}
+
+.sheet-zoom-btn:active {
+  background-color: var(--border-default);
+  transform: scale(0.97);
+}
+
+.sheet-zoom-value-btn {
+  min-width: 60px;
+  padding: 0 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
 /* Visibility Utilities */
 .desktop-only {
   display: inline-flex !important;
@@ -503,7 +565,7 @@
 }
 
 /* Responsive adjustments for mobile viewports */
-@media (max-width: 680px) {
+@media (max-width: 768px) {
   .desktop-only {
     display: none !important;
   }
@@ -511,29 +573,34 @@
     display: inline-flex !important;
   }
   .app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding-left: calc(0.5rem + var(--safe-area-left));
     padding-right: calc(0.5rem + var(--safe-area-right));
+  }
+  /* Hide segmented switch on mobile header; accessed via mobile sheet */
+  .header-center {
+    display: none !important;
+  }
+  .view-switcher {
+    display: none !important;
   }
   .app-name {
     display: none;
   }
-  .doc-title {
-    max-width: 105px;
-    font-size: 0.8rem;
-  }
   .header-left {
+    flex: 1;
+    min-width: 0;
     gap: 0.35rem;
   }
+  .doc-title {
+    max-width: 100%;
+    font-size: 0.82rem;
+  }
   .header-right {
+    flex-shrink: 0;
     gap: 0.25rem;
-  }
-  .view-switcher {
-    padding: 1px;
-    gap: 1px;
-  }
-  .view-btn {
-    padding: 0.2rem 0.55rem;
-    font-size: 0.74rem;
   }
   .tool-btn {
     width: 36px;
@@ -567,12 +634,7 @@
 
 @media (max-width: 360px) {
   .doc-title {
-    max-width: 75px;
-    font-size: 0.75rem;
-  }
-  .view-btn {
-    padding: 0.15rem 0.4rem;
-    font-size: 0.7rem;
+    font-size: 0.76rem;
   }
   .tool-btn {
     width: 32px;

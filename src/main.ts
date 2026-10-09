@@ -16,6 +16,14 @@ import {
   pickSaveFile,
   getCliTargetFile,
 } from "./api";
+import {
+  initZoom,
+  getZoom,
+  zoomIn,
+  zoomOut,
+  resetZoom,
+  formatZoom,
+} from "./zoom";
 
 // Main Application Controller
 class TsuzuriApp {
@@ -43,11 +51,22 @@ class TsuzuriApp {
   private btnCloseToc!: HTMLButtonElement;
   private toastEl!: HTMLElement;
 
+  // Zoom Controls
+  private btnZoomReset!: HTMLButtonElement | null;
+  private headerZoomValue!: HTMLElement | null;
+  private sheetBtnZoomIn!: HTMLButtonElement | null;
+  private sheetBtnZoomOut!: HTMLButtonElement | null;
+  private sheetBtnZoomReset!: HTMLButtonElement | null;
+  private sheetZoomValue!: HTMLElement | null;
+
   // Mobile Sheet & Backdrop Elements
   private btnMore!: HTMLButtonElement;
   private mobileSheet!: HTMLElement;
   private btnCloseSheet!: HTMLButtonElement;
   private drawerBackdrop!: HTMLElement;
+  private sheetBtnViewMode!: HTMLButtonElement | null;
+  private sheetViewLabel!: HTMLElement | null;
+  private sheetViewIcon!: SVGElement | null;
   private sheetBtnOpen!: HTMLButtonElement;
   private sheetBtnSave!: HTMLButtonElement;
   private sheetBtnFind!: HTMLButtonElement;
@@ -82,14 +101,17 @@ class TsuzuriApp {
   public async init(): Promise<void> {
     this.bindDomElements();
     this.initThemeSystem();
+    this.initZoomSystem();
     this.initEditor();
     this.initNavigation();
     this.bindEvents();
     this.bindShortcuts();
+    this.bindWheelZoom();
     this.bindDragAndDrop();
 
     // Initial render
     this.updateTitleDisplay();
+    this.updateMobileViewToggleDisplay();
     await this.renderCurrentDocument();
 
     // Setup interactive behaviors (links, copy buttons)
@@ -122,10 +144,20 @@ class TsuzuriApp {
     this.btnCloseToc = document.getElementById("btn-close-toc") as HTMLButtonElement;
     this.toastEl = document.getElementById("toast-notification") as HTMLElement;
 
+    this.btnZoomReset = document.getElementById("btn-zoom-reset") as HTMLButtonElement | null;
+    this.headerZoomValue = document.getElementById("header-zoom-value") as HTMLElement | null;
+    this.sheetBtnZoomIn = document.getElementById("sheet-btn-zoom-in") as HTMLButtonElement | null;
+    this.sheetBtnZoomOut = document.getElementById("sheet-btn-zoom-out") as HTMLButtonElement | null;
+    this.sheetBtnZoomReset = document.getElementById("sheet-btn-zoom-reset") as HTMLButtonElement | null;
+    this.sheetZoomValue = document.getElementById("sheet-zoom-value") as HTMLElement | null;
+
     this.btnMore = document.getElementById("btn-more") as HTMLButtonElement;
     this.mobileSheet = document.getElementById("mobile-sheet") as HTMLElement;
     this.btnCloseSheet = document.getElementById("btn-close-sheet") as HTMLButtonElement;
     this.drawerBackdrop = document.getElementById("drawer-backdrop") as HTMLElement;
+    this.sheetBtnViewMode = document.getElementById("sheet-btn-view-mode") as HTMLButtonElement | null;
+    this.sheetViewLabel = document.getElementById("sheet-view-label") as HTMLElement | null;
+    this.sheetViewIcon = document.getElementById("sheet-view-icon") as unknown as SVGElement | null;
     this.sheetBtnOpen = document.getElementById("sheet-btn-open") as HTMLButtonElement;
     this.sheetBtnSave = document.getElementById("sheet-btn-save") as HTMLButtonElement;
     this.sheetBtnFind = document.getElementById("sheet-btn-find") as HTMLButtonElement;
@@ -171,6 +203,49 @@ class TsuzuriApp {
         btn.classList.remove("active");
       }
     });
+  }
+
+  private initZoomSystem(): void {
+    initZoom((zoom) => {
+      this.updateZoomDisplay(zoom);
+    });
+    this.updateZoomDisplay(getZoom());
+  }
+
+  private updateZoomDisplay(zoom: number): void {
+    const formatted = formatZoom(zoom);
+    if (this.sheetZoomValue) {
+      this.sheetZoomValue.textContent = formatted;
+    }
+    if (this.btnZoomReset && this.headerZoomValue) {
+      if (Math.abs(zoom - 1.0) > 0.01) {
+        this.headerZoomValue.textContent = formatted;
+        this.btnZoomReset.style.display = "inline-flex";
+        this.btnZoomReset.title = `Reset Zoom (${formatted} → 100%) (Ctrl+0)`;
+      } else {
+        this.btnZoomReset.style.display = "none";
+      }
+    }
+  }
+
+  private updateMobileViewToggleDisplay(): void {
+    if (!this.sheetBtnViewMode || !this.sheetViewLabel || !this.sheetViewIcon) return;
+    const isReader = this.state.activeView === "reader";
+    if (isReader) {
+      this.sheetViewLabel.textContent = "Edit Document";
+      this.sheetViewIcon.innerHTML = `
+        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+        <path d="m15 5 4 4"></path>
+      `;
+      this.sheetBtnViewMode.title = "Switch to Editor Mode (Ctrl+E)";
+    } else {
+      this.sheetViewLabel.textContent = "Reader View";
+      this.sheetViewIcon.innerHTML = `
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+      `;
+      this.sheetBtnViewMode.title = "Switch to Reader View (Ctrl+E)";
+    }
   }
 
   private cycleTheme(): void {
@@ -345,6 +420,41 @@ class TsuzuriApp {
       this.openFindBar(false);
     });
 
+    if (this.sheetBtnViewMode) {
+      this.sheetBtnViewMode.addEventListener("click", () => {
+        this.closeMobileSheet();
+        this.switchView(this.state.activeView === "reader" ? "editor" : "reader");
+      });
+    }
+
+    if (this.btnZoomReset) {
+      this.btnZoomReset.addEventListener("click", () => {
+        resetZoom();
+        this.showToast("Zoom: 100% (Reset)");
+      });
+    }
+
+    if (this.sheetBtnZoomIn) {
+      this.sheetBtnZoomIn.addEventListener("click", () => {
+        zoomIn();
+        this.showToast(`Zoom: ${formatZoom(getZoom())}`);
+      });
+    }
+
+    if (this.sheetBtnZoomOut) {
+      this.sheetBtnZoomOut.addEventListener("click", () => {
+        zoomOut();
+        this.showToast(`Zoom: ${formatZoom(getZoom())}`);
+      });
+    }
+
+    if (this.sheetBtnZoomReset) {
+      this.sheetBtnZoomReset.addEventListener("click", () => {
+        resetZoom();
+        this.showToast("Zoom: 100% (Reset)");
+      });
+    }
+
     if (this.sheetBtnWrap) {
       this.sheetBtnWrap.addEventListener("click", () => {
         this.closeMobileSheet();
@@ -399,6 +509,18 @@ class TsuzuriApp {
       } else if (e.altKey && e.key.toLowerCase() === "z") {
         e.preventDefault();
         this.toggleWordWrap();
+      } else if (isCmdOrCtrl && (e.key === "=" || e.key === "+" || e.code === "Equal" || e.code === "NumpadAdd")) {
+        e.preventDefault();
+        zoomIn();
+        this.showToast(`Zoom: ${formatZoom(getZoom())}`);
+      } else if (isCmdOrCtrl && (e.key === "-" || e.key === "_" || e.code === "Minus" || e.code === "NumpadSubtract")) {
+        e.preventDefault();
+        zoomOut();
+        this.showToast(`Zoom: ${formatZoom(getZoom())}`);
+      } else if (isCmdOrCtrl && (e.key === "0" || e.code === "Digit0" || e.code === "Numpad0")) {
+        e.preventDefault();
+        resetZoom();
+        this.showToast("Zoom: 100% (Reset)");
       } else if (e.key === "Escape") {
         if (this.isMobileSheetOpen) {
           this.closeMobileSheet();
@@ -409,6 +531,34 @@ class TsuzuriApp {
         }
       }
     });
+  }
+
+  private bindWheelZoom(): void {
+    let wheelAccumulator = 0;
+    const WHEEL_THRESHOLD = 50;
+    let lastWheelTime = 0;
+
+    window.addEventListener(
+      "wheel",
+      (e: WheelEvent) => {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          const now = Date.now();
+          wheelAccumulator += e.deltaY;
+          if (Math.abs(wheelAccumulator) >= WHEEL_THRESHOLD || (now - lastWheelTime > 160 && Math.abs(e.deltaY) > 0)) {
+            if (wheelAccumulator < 0 || e.deltaY < 0) {
+              zoomIn();
+            } else {
+              zoomOut();
+            }
+            wheelAccumulator = 0;
+            lastWheelTime = now;
+            this.showToast(`Zoom: ${formatZoom(getZoom())}`);
+          }
+        }
+      },
+      { passive: false }
+    );
   }
 
   private bindDragAndDrop(): void {
@@ -506,6 +656,8 @@ class TsuzuriApp {
       this.editor.updateLineNumbers();
       this.editor.focus();
     }
+
+    this.updateMobileViewToggleDisplay();
   }
 
   private async renderCurrentDocument(): Promise<void> {
