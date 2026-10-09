@@ -90,7 +90,18 @@
 }
 
 .find-btn.close-btn {
-  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.find-btn.close-btn svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  shape-rendering: geometricPrecision;
 }
 
 /* Editor Surface & Line Numbers (Reference: md-latex-mermaid2pdf) */
