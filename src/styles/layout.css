@@ -639,6 +639,7 @@
     overflow: visible !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
+    content-visibility: visible !important;
   }
 
   pre.hljs,
@@ -652,6 +653,7 @@
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     box-shadow: none !important;
+    content-visibility: visible !important;
   }
 
   pre.hljs {

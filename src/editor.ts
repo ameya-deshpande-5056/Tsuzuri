@@ -47,6 +47,10 @@ export class MarkdownEditor {
   private redoStack: string[] = [];
   private isApplyingHistory: boolean = false;
   private maxHistory: number = 100;
+  // Measurement performance cache & RAF debouncing
+  private lineMeasureCache = new Map<string, number>();
+  private lastMeasureWidth: number = 0;
+  private lineUpdateRaf: number | null = null;
   private historyDebounceTimer: number = 0;
 
   constructor(
@@ -75,7 +79,7 @@ export class MarkdownEditor {
   private initEvents(): void {
     // Content input and history tracking
     this.textarea.addEventListener("input", () => {
-      this.updateLineNumbers();
+      this.scheduleUpdateLineNumbers();
       this.callbacks.onContentChange(this.textarea.value);
 
       if (!this.isApplyingHistory) {
@@ -251,7 +255,28 @@ export class MarkdownEditor {
     this.textarea.focus();
   }
 
+  public scheduleUpdateLineNumbers(): void {
+    if (this.lineUpdateRaf !== null) return;
+    const scheduleFn = typeof requestAnimationFrame !== "undefined"
+      ? requestAnimationFrame
+      : (cb: FrameRequestCallback) => setTimeout(cb, 0);
+
+    this.lineUpdateRaf = scheduleFn(() => {
+      this.lineUpdateRaf = null;
+      this.updateLineNumbers(false);
+    }) as unknown as number;
+  }
+
   public updateLineNumbers(force: boolean = false): void {
+    if (this.lineUpdateRaf !== null) {
+      if (typeof cancelAnimationFrame !== "undefined") {
+        cancelAnimationFrame(this.lineUpdateRaf);
+      } else {
+        clearTimeout(this.lineUpdateRaf);
+      }
+      this.lineUpdateRaf = null;
+    }
+
     const count = this.countEditorLines(this.textarea.value);
     if (this.wordWrap) {
       this.renderWrappedLineNumbers();
@@ -276,27 +301,56 @@ export class MarkdownEditor {
 
   private renderWrappedLineNumbers(): void {
     const editorStyle = window.getComputedStyle(this.textarea);
-    const contentWidth = this.textarea.clientWidth
-      - parseFloat(editorStyle.paddingLeft)
-      - parseFloat(editorStyle.paddingRight);
+    const contentWidth = Math.max(
+      1,
+      this.textarea.clientWidth
+        - parseFloat(editorStyle.paddingLeft || "0")
+        - parseFloat(editorStyle.paddingRight || "0")
+    );
     const defaultLineHeight = parseFloat(editorStyle.lineHeight) || 23.1;
 
-    this.lineMeasure.style.width = `${Math.max(1, contentWidth)}px`;
+    // Invalidate measurement cache if editor width changed (> 2px)
+    if (Math.abs(contentWidth - this.lastMeasureWidth) > 2) {
+      this.lineMeasureCache.clear();
+      this.lastMeasureWidth = contentWidth;
+    }
+
+    this.lineMeasure.style.width = `${contentWidth}px`;
     this.lineMeasure.style.font = editorStyle.font;
     this.lineMeasure.style.lineHeight = editorStyle.lineHeight;
     this.lineMeasure.style.letterSpacing = editorStyle.letterSpacing;
     this.lineMeasure.style.tabSize = editorStyle.tabSize;
 
+    // Measure representative 10-char width once to calculate minimum wrap threshold
+    this.lineMeasure.textContent = "MMMMMMMMMM";
+    const tenWidth = this.lineMeasure.getBoundingClientRect().width;
+    const charWidth = tenWidth > 0 ? (tenWidth / 10) : 8.4;
+    // Lines shorter than this character limit cannot physically wrap; height is strictly defaultLineHeight
+    const safeThreshold = Math.max(1, Math.floor(contentWidth / charWidth));
+
     const fragment = document.createDocumentFragment();
-    this.textarea.value.split("\n").forEach((line, index) => {
-      this.lineMeasure.textContent = line || "\u200b";
+    const lines = this.textarea.value.split("\n");
+    for (let index = 0; index < lines.length; index++) {
+      const line = lines[index];
       const number = document.createElement("span");
       number.className = "line-number";
       number.textContent = String(index + 1);
-      const measuredH = this.lineMeasure.getBoundingClientRect().height || defaultLineHeight;
-      number.style.height = `${measuredH}px`;
+
+      if (line.length < safeThreshold) {
+        // Fast path: line cannot wrap (0 DOM reflows)
+        number.style.height = `${defaultLineHeight}px`;
+      } else {
+        // Line exceeds threshold: check cache first to avoid layout thrashing
+        let measuredH = this.lineMeasureCache.get(line);
+        if (measuredH === undefined) {
+          this.lineMeasure.textContent = line || "\u200b";
+          measuredH = this.lineMeasure.getBoundingClientRect().height || defaultLineHeight;
+          this.lineMeasureCache.set(line, measuredH);
+        }
+        number.style.height = `${measuredH}px`;
+      }
       fragment.appendChild(number);
-    });
+    }
     this.lineGutter.replaceChildren(fragment);
   }
 

@@ -6,7 +6,7 @@ import "./styles/editor.css";
 
 import { createInitialState, AppState, ViewMode, ThemeMode } from "./state";
 import { initTheme, setTheme, getTheme } from "./theme";
-import { renderDocument, setupInteractiveBehaviors } from "./renderer";
+import { renderDocument, renderMermaidDiagrams, setupInteractiveBehaviors } from "./renderer";
 import { MarkdownEditor } from "./editor";
 import { NavigationManager } from "./navigation";
 import {
@@ -506,6 +506,8 @@ class TsuzuriApp {
     if (this.state.activeView !== "reader") {
       await this.switchView("reader");
     }
+    // Ensure all diagrams are fully rendered before opening print dialog
+    await renderMermaidDiagrams(this.readerContent, true);
     window.print();
   }
 
@@ -538,7 +540,7 @@ class TsuzuriApp {
       this.editor.setValue(doc.content, true);
       this.updateTitleDisplay();
       this.updateEditorStats(doc.content);
-      await this.renderCurrentDocument();
+      // switchView("reader") renders the document
       await this.switchView("reader");
       this.showToast(`Opened ${doc.file_name}`);
     } catch (err) {
@@ -649,9 +651,8 @@ class TsuzuriApp {
     this.updateEditorStats(this.state.doc.content);
     this.updateTitleDisplay();
 
-    // Start in Reader view
+    // Start in Reader view (switchView("reader") renders the document)
     await this.switchView("reader");
-    await this.renderCurrentDocument();
     this.showToast(`Opened ${this.state.doc.fileName}`);
   }
 
@@ -682,8 +683,17 @@ class TsuzuriApp {
   }
 
   private updateEditorStats(content: string): void {
-    const trimmed = content.trim();
-    const wordCount = trimmed ? trimmed.split(/\s+/).length : 0;
+    let wordCount = 0;
+    let inWord = false;
+    for (let i = 0; i < content.length; i++) {
+      const code = content.charCodeAt(i);
+      if (code <= 32) {
+        inWord = false;
+      } else if (!inWord) {
+        inWord = true;
+        wordCount++;
+      }
+    }
     const charCount = content.length;
     const readTimeMinutes = Math.max(1, Math.round(wordCount / 200));
     this.editorStats.textContent = `${wordCount} words · ${charCount} chars · ${readTimeMinutes} min read`;

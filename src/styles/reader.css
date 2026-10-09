@@ -265,6 +265,8 @@ pre.hljs:focus-within .code-copy-btn {
   padding: 0.5rem 0;
   text-align: center;
   box-sizing: border-box;
+  content-visibility: auto;
+  contain-intrinsic-size: 60px;
 }
 
 .katex-display {
@@ -301,6 +303,8 @@ pre.hljs:focus-within .code-copy-btn {
   justify-content: center;
   align-items: center;
   box-sizing: border-box;
+  content-visibility: auto;
+  contain-intrinsic-size: 260px;
 }
 
 .mermaid-svg-wrapper {

@@ -305,16 +305,27 @@ md.renderer.rules.heading_open = (tokens, idx, options, _env, self) => {
   return self.renderToken(tokens, idx, options);
 };
 
+// In-memory cache for rendered KaTeX HTML strings
+const katexCache = new Map<string, string>();
+
 // Render TeX safely with KaTeX
 function renderTex(tex: string, display: boolean): string {
+  const cacheKey = `${display ? "D" : "I"}:${tex}`;
+  const cached = katexCache.get(cacheKey);
+  if (cached !== undefined) {
+    return cached;
+  }
+
   try {
-    return katex.renderToString(tex, {
+    const rendered = katex.renderToString(tex, {
       displayMode: display,
       throwOnError: false,
       errorColor: "#ef4444",
       output: "htmlAndMathml",
       strict: false,
     });
+    katexCache.set(cacheKey, rendered);
+    return rendered;
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : "LaTeX render error";
     const tag = display ? "div" : "span";
@@ -434,20 +445,43 @@ function ensureMermaidInitialized(isDark: boolean): void {
   }
 }
 
-// Render all Mermaid diagrams inside a container
-export async function renderMermaidDiagrams(container: HTMLElement): Promise<void> {
+// In-memory cache for rendered Mermaid SVGs: key = `${theme}:${rawSource}` -> SVG markup
+const mermaidSvgCache = new Map<string, string>();
+let activeMermaidObserver: IntersectionObserver | null = null;
+
+// Render Mermaid diagrams inside a container with viewport-lazy rendering and caching
+export async function renderMermaidDiagrams(container: HTMLElement, forceAll: boolean = false): Promise<void> {
   const isDark = isDarkModeActive();
   ensureMermaidInitialized(isDark);
 
+  if (activeMermaidObserver) {
+    activeMermaidObserver.disconnect();
+    activeMermaidObserver = null;
+  }
+
   const diagramNodes = container.querySelectorAll<HTMLElement>(".mermaid-diagram");
-  for (const node of diagramNodes) {
-    const rawSource = node.querySelector(".mermaid-source")?.textContent?.trim() || "";
-    if (!rawSource) continue;
+  if (!diagramNodes.length) return;
+
+  const renderSingleDiagram = async (node: HTMLElement): Promise<void> => {
+    if (node.dataset.rendered === "true") return;
+
+    const rawSource = node.querySelector(".mermaid-source")?.textContent?.trim() || node.dataset.rawSource || "";
+    if (!rawSource) return;
+
+    const cacheKey = `${isDark ? "dark" : "light"}:${rawSource}`;
+    const cached = mermaidSvgCache.get(cacheKey);
+    if (cached) {
+      node.innerHTML = `<div class="mermaid-svg-wrapper">${cached}</div>`;
+      node.dataset.rendered = "true";
+      return;
+    }
 
     const diagramId = `mmd-${Math.random().toString(36).slice(2, 10)}`;
     try {
       const { svg } = await mermaid.render(diagramId, rawSource);
+      mermaidSvgCache.set(cacheKey, svg);
       node.innerHTML = `<div class="mermaid-svg-wrapper">${svg}</div>`;
+      node.dataset.rendered = "true";
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Mermaid syntax error";
       node.innerHTML = `
@@ -459,6 +493,50 @@ export async function renderMermaidDiagrams(container: HTMLElement): Promise<voi
           <pre class="mermaid-fallback-code">${escapeHtml(rawSource)}</pre>
         </div>
       `;
+      node.dataset.rendered = "true";
+    }
+  };
+
+  // If forceAll is requested (e.g. before print) or in headless/JSDOM test environments without IntersectionObserver
+  if (forceAll || typeof IntersectionObserver === "undefined") {
+    for (const node of diagramNodes) {
+      await renderSingleDiagram(node);
+      // Yield to event loop to keep the UI interactive and avoid freezing
+      if (diagramNodes.length > 3) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+    }
+    return;
+  }
+
+  // Viewport-Lazy rendering with IntersectionObserver (800px prefetch rootMargin)
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const target = entry.target as HTMLElement;
+          observer.unobserve(target);
+          renderSingleDiagram(target);
+        }
+      });
+    },
+    {
+      rootMargin: "800px 0px 800px 0px",
+      threshold: 0,
+    }
+  );
+
+  activeMermaidObserver = observer;
+
+  for (const node of diagramNodes) {
+    const rawSource = node.querySelector(".mermaid-source")?.textContent?.trim() || "";
+    node.dataset.rawSource = rawSource;
+
+    const cacheKey = `${isDark ? "dark" : "light"}:${rawSource}`;
+    if (mermaidSvgCache.has(cacheKey)) {
+      renderSingleDiagram(node);
+    } else {
+      observer.observe(node);
     }
   }
 }
