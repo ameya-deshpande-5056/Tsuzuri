@@ -55,7 +55,7 @@
       <!-- Minimalist App Chrome -->
       <header class="app-header" id="app-header">
         <div class="header-left">
-          <span class="app-name">綴り</span>
+          <span class="app-name" title="About Tsuzuri" role="button" tabindex="0">綴り</span>
           <span class="doc-title-wrapper">
             <span id="doc-title" class="doc-title">untitled.md</span>
             <span id="dirty-indicator" class="dirty-indicator" title="Unsaved changes" style="display: none;">•</span>
@@ -211,6 +211,14 @@
               <span id="sheet-wrap-label">Word Wrap: On</span>
               <kbd class="menu-shortcut-badge">Alt+Z</kbd>
             </button>
+            <button id="sheet-btn-about" class="sheet-action-item" title="About Tsuzuri">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <span>About Tsuzuri</span>
+            </button>
           </div>
 
           <div class="sheet-section-title">Zoom</div>
@@ -273,6 +281,42 @@
           </div>
         </div>
       </aside>
+
+      <!-- About Application Modal Dialog -->
+      <div id="about-modal-backdrop" class="modal-backdrop" aria-hidden="true">
+        <div id="about-dialog" class="about-dialog" role="dialog" aria-modal="true" aria-labelledby="about-dialog-title">
+          <div class="about-header">
+            <span id="about-dialog-title" class="about-title">About Tsuzuri</span>
+            <button id="btn-close-about-x" class="about-close-x-btn" title="Close" aria-label="Close About Dialog">✕</button>
+          </div>
+          <div class="about-body">
+            <div class="about-icon-container">
+              <img src="/icon.png" alt="Tsuzuri Icon" class="about-app-icon" />
+            </div>
+            <div class="about-details">
+              <h2 id="about-version-heading" class="about-app-heading">Tsuzuri 1.0.4</h2>
+              <p class="about-description">A quiet, lightweight, and offline Markdown document reader and editor.</p>
+              <div class="about-meta-grid">
+                <span class="about-meta-label">Version:</span>
+                <span id="about-meta-version" class="about-meta-value">1.0.4</span>
+
+                <span class="about-meta-label">Build time:</span>
+                <span id="about-meta-build-time" class="about-meta-value"></span>
+
+                <span class="about-meta-label">Project:</span>
+                <span class="about-meta-value">
+                  <a id="about-github-link" href="https://github.com/ameya-deshpande-5056/tsuzuri" target="_blank" rel="noopener noreferrer" class="about-link">https://github.com/ameya-deshpande-5056/tsuzuri</a>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="about-footer">
+            <button id="btn-close-about" class="about-close-btn" aria-label="Close About Dialog">
+              <span class="about-close-icon">✕</span> Close
+            </button>
+          </div>
+        </div>
+      </div>
 
       <!-- Transient Status Message Toast -->
       <div id="toast-notification" class="toast-notification" aria-live="polite"></div>

@@ -45,6 +45,18 @@
   letter-spacing: -0.01em;
   color: var(--text-primary);
   flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.15s ease;
+}
+
+.app-name:hover {
+  opacity: 0.8;
+}
+
+.app-name:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: 2px;
 }
 
 .doc-title-wrapper {
@@ -834,6 +846,205 @@
   }
 }
 
+/* About Application Modal Dialog */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.about-dialog {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-default);
+  width: 100%;
+  max-width: 520px;
+  max-height: min(90vh, 90dvh);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.96) translateY(8px);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-backdrop.open .about-dialog {
+  transform: scale(1) translateY(0);
+}
+
+.about-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-default);
+  background-color: var(--bg-surface);
+}
+
+.about-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.about-close-x-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.about-close-x-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.about-body {
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.about-icon-container {
+  flex-shrink: 0;
+}
+
+.about-app-icon {
+  width: 76px;
+  height: 76px;
+  border-radius: 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  display: block;
+  object-fit: cover;
+}
+
+.about-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.about-app-heading {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  margin: 0 0 0.35rem 0;
+}
+
+.about-description {
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  margin: 0 0 1rem 0;
+}
+
+.about-meta-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  row-gap: 0.45rem;
+  column-gap: 1.15rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.about-meta-label {
+  color: var(--text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.about-meta-value {
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+  word-break: normal;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+.about-link {
+  color: var(--link-color);
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.about-link:hover {
+  opacity: 0.85;
+}
+
+.about-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border-default);
+  background-color: var(--bg-subtle);
+}
+
+.about-close-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  padding: 0.45rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.about-close-btn:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.about-close-icon {
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+@media (max-width: 480px) {
+  .about-body {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+    padding: 1.25rem 1rem;
+  }
+
+  .about-meta-grid {
+    text-align: left;
+    margin-top: 0.5rem;
+  }
+}
+
 /* Print & PDF Export Styles */
 @media print {
   @page {
@@ -859,6 +1070,7 @@
   .toc-drawer,
   .mobile-sheet,
   .drawer-backdrop,
+  .modal-backdrop,
   .find-replace-bar,
   .code-copy-btn,
   .line-gutter,

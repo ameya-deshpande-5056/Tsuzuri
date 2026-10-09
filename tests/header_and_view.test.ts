@@ -242,5 +242,48 @@ describe("Header Layout, Tooltip & View Switch Polishing", () => {
     expect(tauriConf.version).toBe(pkg.version);
     expect(tauriConf.bundle?.android?.versionCode).toBeGreaterThanOrEqual(1000000);
   });
+
+  it("provides About Tsuzuri dialog with icon, version, build time, and external link", () => {
+    const indexHtml = fs.readFileSync("/home/ameya/Tsuzuri/index.html", "utf-8");
+    const layoutCss = fs.readFileSync("/home/ameya/Tsuzuri/src/styles/layout.css", "utf-8");
+    const mainTs = fs.readFileSync("/home/ameya/Tsuzuri/src/main.ts", "utf-8");
+    const viteConfig = fs.readFileSync("/home/ameya/Tsuzuri/vite.config.ts", "utf-8");
+    const typesDts = fs.readFileSync("/home/ameya/Tsuzuri/src/types.d.ts", "utf-8");
+
+    // Vite defines build timestamp and app version
+    expect(viteConfig).toContain("__APP_VERSION__");
+    expect(viteConfig).toContain("__BUILD_TIME__");
+    expect(typesDts).toContain("declare const __APP_VERSION__: string;");
+    expect(typesDts).toContain("declare const __BUILD_TIME__: string;");
+
+    // Action button in menu
+    expect(indexHtml).toContain('id="sheet-btn-about"');
+    expect(indexHtml).toContain("About Tsuzuri");
+
+    // Dialog elements in index.html
+    expect(indexHtml).toContain('id="about-modal-backdrop"');
+    expect(indexHtml).toContain('id="about-dialog"');
+    expect(indexHtml).toContain('id="btn-close-about-x"');
+    expect(indexHtml).toContain('class="about-app-icon"');
+    expect(indexHtml).toContain('id="about-version-heading"');
+    expect(indexHtml).toContain('id="about-meta-version"');
+    expect(indexHtml).toContain('id="about-meta-build-time"');
+    expect(indexHtml).toContain('id="about-github-link"');
+    expect(indexHtml).toContain('id="btn-close-about"');
+
+    // Dialog styles in layout.css
+    expect(layoutCss).toContain(".modal-backdrop");
+    expect(layoutCss).toContain(".about-dialog");
+    expect(layoutCss).toContain(".about-app-icon");
+    expect(layoutCss).toContain(".about-meta-grid");
+    expect(layoutCss).toContain(".about-close-btn");
+
+    // Click handler and open/close logic in main.ts
+    expect(mainTs).toContain("openAboutDialog");
+    expect(mainTs).toContain("closeAboutDialog");
+    expect(mainTs).toContain("sheetBtnAbout");
+    expect(mainTs).toContain("aboutGithubLink");
+    expect(mainTs).toContain("openInBrowser");
+  });
 });
 

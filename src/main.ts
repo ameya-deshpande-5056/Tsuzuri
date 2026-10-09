@@ -15,6 +15,7 @@ import {
   pickOpenFile,
   pickSaveFile,
   getCliTargetFile,
+  openInBrowser,
 } from "./api";
 import {
   initZoom,
@@ -92,6 +93,18 @@ class TsuzuriApp {
   private editorCursorPos!: HTMLElement;
   private editorStats!: HTMLElement;
   private btnToggleWrap!: HTMLButtonElement;
+
+  // About Application Modal Elements
+  private aboutModalBackdrop!: HTMLElement;
+  private appNameEl!: HTMLElement | null;
+  private sheetBtnAbout!: HTMLButtonElement | null;
+  private btnCloseAbout!: HTMLButtonElement | null;
+  private btnCloseAboutX!: HTMLButtonElement | null;
+  private aboutGithubLink!: HTMLAnchorElement | null;
+  private aboutVersionHeading!: HTMLElement | null;
+  private aboutMetaVersion!: HTMLElement | null;
+  private aboutMetaBuildTime!: HTMLElement | null;
+  private isAboutDialogOpen: boolean = false;
 
   private toastTimeout: number | null = null;
   private lastRenderedContent: string | null = null;
@@ -181,6 +194,28 @@ class TsuzuriApp {
     this.editorCursorPos = document.getElementById("editor-cursor-pos") as HTMLElement;
     this.editorStats = document.getElementById("editor-stats") as HTMLElement;
     this.btnToggleWrap = document.getElementById("btn-toggle-wrap") as HTMLButtonElement;
+
+    this.aboutModalBackdrop = document.getElementById("about-modal-backdrop") as HTMLElement;
+    this.appNameEl = document.querySelector(".app-name") as HTMLElement | null;
+    this.sheetBtnAbout = document.getElementById("sheet-btn-about") as HTMLButtonElement | null;
+    this.btnCloseAbout = document.getElementById("btn-close-about") as HTMLButtonElement | null;
+    this.btnCloseAboutX = document.getElementById("btn-close-about-x") as HTMLButtonElement | null;
+    this.aboutGithubLink = document.getElementById("about-github-link") as HTMLAnchorElement | null;
+    this.aboutVersionHeading = document.getElementById("about-version-heading") as HTMLElement | null;
+    this.aboutMetaVersion = document.getElementById("about-meta-version") as HTMLElement | null;
+    this.aboutMetaBuildTime = document.getElementById("about-meta-build-time") as HTMLElement | null;
+
+    const appVersion = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "1.0.4";
+    const appBuildTime = typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "";
+    if (this.aboutVersionHeading) {
+      this.aboutVersionHeading.textContent = `Tsuzuri ${appVersion}`;
+    }
+    if (this.aboutMetaVersion) {
+      this.aboutMetaVersion.textContent = appVersion;
+    }
+    if (this.aboutMetaBuildTime) {
+      this.aboutMetaBuildTime.textContent = appBuildTime;
+    }
   }
 
   private initThemeSystem(): void {
@@ -279,6 +314,22 @@ class TsuzuriApp {
     this.mobileSheet.setAttribute("aria-hidden", "true");
     if (!this.state.tocOpen) {
       this.drawerBackdrop.classList.remove("active");
+    }
+  }
+
+  private openAboutDialog(): void {
+    this.isAboutDialogOpen = true;
+    if (this.aboutModalBackdrop) {
+      this.aboutModalBackdrop.classList.add("open");
+      this.aboutModalBackdrop.setAttribute("aria-hidden", "false");
+    }
+  }
+
+  private closeAboutDialog(): void {
+    this.isAboutDialogOpen = false;
+    if (this.aboutModalBackdrop) {
+      this.aboutModalBackdrop.classList.remove("open");
+      this.aboutModalBackdrop.setAttribute("aria-hidden", "true");
     }
   }
 
@@ -499,6 +550,39 @@ class TsuzuriApp {
         }
       });
     });
+
+    // About Application Modal Events
+    this.appNameEl?.addEventListener("click", () => this.openAboutDialog());
+    this.appNameEl?.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        this.openAboutDialog();
+      }
+    });
+
+    this.sheetBtnAbout?.addEventListener("click", () => {
+      this.closeMobileSheet();
+      this.openAboutDialog();
+    });
+
+    this.btnCloseAbout?.addEventListener("click", () => this.closeAboutDialog());
+    this.btnCloseAboutX?.addEventListener("click", () => this.closeAboutDialog());
+
+    this.aboutModalBackdrop?.addEventListener("click", (e: MouseEvent) => {
+      if (e.target === this.aboutModalBackdrop) {
+        this.closeAboutDialog();
+      }
+    });
+
+    this.aboutGithubLink?.addEventListener("click", async (e: MouseEvent) => {
+      e.preventDefault();
+      const url = this.aboutGithubLink?.href || "https://github.com/ameya-deshpande-5056/tsuzuri";
+      try {
+        await openInBrowser(url);
+      } catch {
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
+    });
   }
 
   private bindShortcuts(): void {
@@ -543,7 +627,9 @@ class TsuzuriApp {
         resetZoom();
         this.showToast("Zoom: 100% (Reset)");
       } else if (e.key === "Escape") {
-        if (this.isMobileSheetOpen) {
+        if (this.isAboutDialogOpen) {
+          this.closeAboutDialog();
+        } else if (this.isMobileSheetOpen) {
           this.closeMobileSheet();
         } else if (this.state.findOpen) {
           this.closeFindBar();

@@ -20,3 +20,7 @@ declare module "markdown-it-task-lists" {
   export default plugin;
 }
 
+declare const __APP_VERSION__: string;
+declare const __BUILD_TIME__: string;
+
+
