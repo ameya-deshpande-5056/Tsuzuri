@@ -152,7 +152,7 @@
   display: inline-flex;
   align-items: center;
   line-height: 1;
-  transform: translateY(0.5px);
+  transform: translateY(1.5px);
 }
 
 .tool-btn:hover {
@@ -425,6 +425,7 @@
   display: inline-flex;
   align-items: center;
   line-height: 1;
+  transform: translateY(1.5px);
 }
 
 .sheet-action-item:active {
