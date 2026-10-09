@@ -445,7 +445,7 @@ class TsuzuriApp {
           } catch {
             // Read content via FileReader fallback
             const reader = new FileReader();
-            reader.onload = (evt) => {
+            reader.onload = async (evt) => {
               const content = evt.target?.result as string;
               this.state.doc = {
                 path: null,
@@ -457,8 +457,13 @@ class TsuzuriApp {
               };
               this.editor.setValue(content, true);
               this.updateTitleDisplay();
-              this.renderCurrentDocument();
-              this.switchView("reader");
+              this.updateEditorStats(content);
+              if (this.state.activeView === "reader") {
+                await this.renderCurrentDocument();
+              } else {
+                await this.switchView("reader");
+              }
+              this.readerView.scrollTop = 0;
               this.showToast(`Loaded ${file.name}`);
             };
             reader.readAsText(file);
@@ -469,8 +474,14 @@ class TsuzuriApp {
   }
 
   // View Switcher (Reader ↔ Editor)
-  public async switchView(newView: ViewMode): Promise<void> {
-    if (this.state.activeView === newView) return;
+  public async switchView(newView: ViewMode, force: boolean = false): Promise<void> {
+    const isSameView = this.state.activeView === newView;
+    if (isSameView && !force) {
+      if (newView === "reader" && this.lastRenderedContent !== this.state.doc.content) {
+        await this.renderCurrentDocument();
+      }
+      return;
+    }
 
     if (newView === "reader") {
       this.state.activeView = "reader";
@@ -485,8 +496,8 @@ class TsuzuriApp {
       this.closeFindBar();
       this.readerView.focus();
 
-      // 2. Only re-render if content has actually changed since last render
-      if (this.lastRenderedContent !== this.state.doc.content) {
+      // 2. Only re-render if content has actually changed since last render or forced
+      if (force || this.lastRenderedContent !== this.state.doc.content) {
         await this.renderCurrentDocument();
       }
     } else {
@@ -502,7 +513,7 @@ class TsuzuriApp {
       this.nav.closeToc();
 
       // 2. Only set textarea value if out of sync to preserve user cursor & avoid unnecessary recalculations
-      if (this.editor.getValue() !== this.state.doc.content) {
+      if (force || this.editor.getValue() !== this.state.doc.content) {
         this.editor.setValue(this.state.doc.content);
       }
       this.editor.updateLineNumbers();
@@ -558,8 +569,13 @@ class TsuzuriApp {
       this.editor.setValue(doc.content, true);
       this.updateTitleDisplay();
       this.updateEditorStats(doc.content);
-      // switchView("reader") renders the document
-      await this.switchView("reader");
+
+      if (this.state.activeView === "reader") {
+        await this.renderCurrentDocument();
+      } else {
+        await this.switchView("reader");
+      }
+      this.readerView.scrollTop = 0;
       this.showToast(`Opened ${doc.file_name}`);
     } catch (err) {
       console.error("Load document error:", err);
@@ -669,8 +685,12 @@ class TsuzuriApp {
     this.updateEditorStats(this.state.doc.content);
     this.updateTitleDisplay();
 
-    // Start in Reader view (switchView("reader") renders the document)
-    await this.switchView("reader");
+    if (this.state.activeView === "reader") {
+      await this.renderCurrentDocument();
+    } else {
+      await this.switchView("reader");
+    }
+    this.readerView.scrollTop = 0;
     this.showToast(`Opened ${this.state.doc.fileName}`);
   }
 

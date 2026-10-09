@@ -91,4 +91,39 @@ describe("Header Layout, Tooltip & View Switch Polishing", () => {
     await switchView("reader");
     expect(renderCount).toBe(2); // Rendered because content changed
   });
+
+  it("instantly updates reader view when a different file is loaded while already in reader view", async () => {
+    let renderedContent: string | null = null;
+    const fakeRender = vi.fn().mockImplementation((content: string) => {
+      renderedContent = content;
+      return Promise.resolve([]);
+    });
+
+    let activeView: "reader" | "editor" = "reader";
+    let docContent = "# Document 1";
+    let lastRenderedContent: string | null = null;
+
+    const renderCurrentDoc = async () => {
+      await fakeRender(docContent);
+      lastRenderedContent = docContent;
+    };
+
+    const loadNewDoc = async (newContent: string) => {
+      docContent = newContent;
+      if (activeView === "reader") {
+        await renderCurrentDoc();
+      }
+    };
+
+    // Initial state: Document 1 loaded and rendered in reader
+    await renderCurrentDoc();
+    expect(renderedContent).toBe("# Document 1");
+    expect(fakeRender).toHaveBeenCalledTimes(1);
+
+    // Load Document 2 while currently in reader view
+    await loadNewDoc("# Document 2");
+    // Verify Document 2 is immediately rendered without needing to switch to editor and back
+    expect(renderedContent).toBe("# Document 2");
+    expect(fakeRender).toHaveBeenCalledTimes(2);
+  });
 });
