@@ -53,6 +53,9 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Synchronize Version from Git Tag
+        run: node scripts/sync-version.js "${{ github.ref_name || inputs.tag }}"
+
       - name: Build Tauri Application
         uses: tauri-apps/tauri-action@v0
         env:
@@ -102,6 +105,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Synchronize Version from Git Tag
+        run: node scripts/sync-version.js "${{ github.ref_name || inputs.tag }}"
 
       - name: Initialize Android Target
         run: npx tauri android init --ci --skip-targets-install
@@ -194,6 +200,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Synchronize Version from Git Tag
+        run: node scripts/sync-version.js "${{ github.ref_name || inputs.tag }}"
 
       - name: Initialize iOS Target
         run: npx tauri ios init --ci --skip-targets-install

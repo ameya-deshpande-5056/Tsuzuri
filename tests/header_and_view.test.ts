@@ -222,5 +222,25 @@ describe("Header Layout, Tooltip & View Switch Polishing", () => {
     expect(mainTs).toContain("this.closeMobileSheet()");
     expect(mainTs).toContain("this.openMobileSheet()");
   });
+
+  it("configures automated version synchronization from git tags in release workflow", () => {
+    const releaseYaml = fs.readFileSync("/home/ameya/Tsuzuri/.github/workflows/release.yml", "utf-8");
+    const syncScript = fs.readFileSync("/home/ameya/Tsuzuri/scripts/sync-version.js", "utf-8");
+    const tauriConf = JSON.parse(fs.readFileSync("/home/ameya/Tsuzuri/src-tauri/tauri.conf.json", "utf-8"));
+    const pkg = JSON.parse(fs.readFileSync("/home/ameya/Tsuzuri/package.json", "utf-8"));
+
+    // release.yml synchronizes versions before building desktop, android, and ios
+    expect(releaseYaml).toContain("Synchronize Version from Git Tag");
+    expect(releaseYaml).toContain("node scripts/sync-version.js");
+
+    // sync-version.js computes Android versionCode and updates configs
+    expect(syncScript).toContain("tauri.conf.json");
+    expect(syncScript).toContain("Cargo.toml");
+    expect(syncScript).toContain("versionCode");
+
+    // Versions match current release tag
+    expect(tauriConf.version).toBe(pkg.version);
+    expect(tauriConf.bundle?.android?.versionCode).toBeGreaterThanOrEqual(1000000);
+  });
 });
 

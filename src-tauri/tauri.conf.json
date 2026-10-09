@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Tsuzuri",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "identifier": "io.github.ameyadeshpande.tsuzuri",
   "build": {
     "frontendDist": "../dist",
@@ -27,7 +27,13 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["deb", "nsis", "msi", "app", "dmg"],
+    "targets": [
+      "deb",
+      "nsis",
+      "msi",
+      "app",
+      "dmg"
+    ],
     "category": "Utility",
     "shortDescription": "Quiet, focused Markdown document reader and editor",
     "longDescription": "A lightweight, offline, cross-platform Markdown document reader and editor supporting LaTeX math, Mermaid diagrams, and syntax highlighting.",
@@ -40,27 +46,41 @@
     ],
     "fileAssociations": [
       {
-        "ext": ["md", "markdown", "mdown", "mkdn"],
+        "ext": [
+          "md",
+          "markdown",
+          "mdown",
+          "mkdn"
+        ],
         "name": "Markdown Document",
         "description": "Markdown Document",
         "role": "Editor",
         "mimeType": "text/markdown",
         "rank": "Default",
-        "contentTypes": ["net.daringfireball.markdown"]
+        "contentTypes": [
+          "net.daringfireball.markdown"
+        ]
       },
       {
-        "ext": ["txt"],
+        "ext": [
+          "txt"
+        ],
         "name": "Plain Text Document",
         "description": "Plain Text Document",
         "role": "Viewer",
         "mimeType": "text/plain",
         "rank": "Alternate",
-        "contentTypes": ["public.plain-text"]
+        "contentTypes": [
+          "public.plain-text"
+        ]
       }
     ],
     "linux": {
       "deb": {
-        "depends": ["libwebkit2gtk-4.1-0 | libwebkit2gtk-4.0-37", "libgtk-3-0"],
+        "depends": [
+          "libwebkit2gtk-4.1-0 | libwebkit2gtk-4.0-37",
+          "libgtk-3-0"
+        ],
         "section": "editors",
         "desktopTemplate": "desktopTemplate.desktop"
       }
@@ -73,11 +93,14 @@
         "language": "en-US"
       },
       "nsis": {
-        "languages": ["English"]
+        "languages": [
+          "English"
+        ]
       }
     },
     "android": {
-      "debugApplicationIdSuffix": ".debug"
+      "debugApplicationIdSuffix": ".debug",
+      "versionCode": 1000004
     }
   }
 }
