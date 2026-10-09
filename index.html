@@ -40,7 +40,7 @@
           if (savedZoom) {
             var z = parseFloat(savedZoom);
             if (!isNaN(z) && z >= 0.5 && z <= 3.0) {
-              root.style.zoom = z;
+              root.style.setProperty("--app-zoom", String(z));
             }
           }
         } catch (e) {}
