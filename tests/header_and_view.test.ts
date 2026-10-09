@@ -264,19 +264,19 @@ describe("Header Layout, Tooltip & View Switch Polishing", () => {
     expect(indexHtml).toContain('id="about-modal-backdrop"');
     expect(indexHtml).toContain('id="about-dialog"');
     expect(indexHtml).toContain('id="btn-close-about-x"');
+    expect(indexHtml).not.toContain('id="btn-close-about"');
     expect(indexHtml).toContain('class="about-app-icon"');
     expect(indexHtml).toContain('id="about-version-heading"');
     expect(indexHtml).toContain('id="about-meta-version"');
     expect(indexHtml).toContain('id="about-meta-build-time"');
     expect(indexHtml).toContain('id="about-github-link"');
-    expect(indexHtml).toContain('id="btn-close-about"');
 
     // Dialog styles in layout.css
     expect(layoutCss).toContain(".modal-backdrop");
     expect(layoutCss).toContain(".about-dialog");
     expect(layoutCss).toContain(".about-app-icon");
     expect(layoutCss).toContain(".about-meta-grid");
-    expect(layoutCss).toContain(".about-close-btn");
+    expect(layoutCss).toContain(".about-close-x-btn");
 
     // Click handler and open/close logic in main.ts
     expect(mainTs).toContain("openAboutDialog");

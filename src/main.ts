@@ -98,7 +98,6 @@ class TsuzuriApp {
   private aboutModalBackdrop!: HTMLElement;
   private appNameEl!: HTMLElement | null;
   private sheetBtnAbout!: HTMLButtonElement | null;
-  private btnCloseAbout!: HTMLButtonElement | null;
   private btnCloseAboutX!: HTMLButtonElement | null;
   private aboutGithubLink!: HTMLAnchorElement | null;
   private aboutVersionHeading!: HTMLElement | null;
@@ -198,7 +197,6 @@ class TsuzuriApp {
     this.aboutModalBackdrop = document.getElementById("about-modal-backdrop") as HTMLElement;
     this.appNameEl = document.querySelector(".app-name") as HTMLElement | null;
     this.sheetBtnAbout = document.getElementById("sheet-btn-about") as HTMLButtonElement | null;
-    this.btnCloseAbout = document.getElementById("btn-close-about") as HTMLButtonElement | null;
     this.btnCloseAboutX = document.getElementById("btn-close-about-x") as HTMLButtonElement | null;
     this.aboutGithubLink = document.getElementById("about-github-link") as HTMLAnchorElement | null;
     this.aboutVersionHeading = document.getElementById("about-version-heading") as HTMLElement | null;
@@ -565,7 +563,6 @@ class TsuzuriApp {
       this.openAboutDialog();
     });
 
-    this.btnCloseAbout?.addEventListener("click", () => this.closeAboutDialog());
     this.btnCloseAboutX?.addEventListener("click", () => this.closeAboutDialog());
 
     this.aboutModalBackdrop?.addEventListener("click", (e: MouseEvent) => {
