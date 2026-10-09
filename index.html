@@ -92,24 +92,13 @@
             <span class="btn-label">Save</span>
           </button>
 
-          <button id="btn-print" class="tool-btn desktop-only" title="Print / Export PDF (Ctrl+P)" aria-label="Print Document">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 6 2 18 2 18 9"></polyline>
-              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-              <rect x="6" y="14" width="12" height="8"></rect>
+          <button id="btn-theme" class="tool-btn desktop-only" title="Toggle Theme" aria-label="Theme mode">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="theme-icon">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 2a10 10 0 0 0 0 20z" fill="currentColor"></path>
             </svg>
-            <span class="btn-label">Print</span>
+            <span id="theme-label" class="btn-label">System</span>
           </button>
-
-          <div class="theme-dropdown-container desktop-only">
-            <button id="btn-theme" class="tool-btn theme-btn" title="Toggle Theme" aria-label="Theme mode">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="theme-icon">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M12 2a10 10 0 0 0 0 20z" fill="currentColor"></path>
-              </svg>
-              <span id="theme-label" class="btn-label">System</span>
-            </button>
-          </div>
 
           <button id="btn-more" class="tool-btn mobile-only" title="More Actions" aria-label="More Actions">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -219,14 +208,6 @@
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
               <span>Find &amp; Replace</span>
-            </button>
-            <button id="sheet-btn-print" class="sheet-action-item">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                <rect x="6" y="14" width="12" height="8"></rect>
-              </svg>
-              <span>Print / Export PDF</span>
             </button>
             <button id="sheet-btn-wrap" class="sheet-action-item">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

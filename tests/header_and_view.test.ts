@@ -126,4 +126,21 @@ describe("Header Layout, Tooltip & View Switch Polishing", () => {
     expect(renderedContent).toBe("# Document 2");
     expect(fakeRender).toHaveBeenCalledTimes(2);
   });
+
+  it("ensures print functionality is completely removed and header buttons are cleanly structured", () => {
+    const fs = require("fs");
+    const indexHtml = fs.readFileSync("/home/ameya/Tsuzuri/index.html", "utf-8");
+    const mainTs = fs.readFileSync("/home/ameya/Tsuzuri/src/main.ts", "utf-8");
+
+    // Print elements removed from index.html
+    expect(indexHtml).not.toContain('id="btn-print"');
+    expect(indexHtml).not.toContain('id="sheet-btn-print"');
+    expect(indexHtml).not.toContain("theme-dropdown-container");
+
+    // Print handlers removed from main.ts
+    expect(mainTs).not.toContain("btnPrint");
+    expect(mainTs).not.toContain("sheetBtnPrint");
+    expect(mainTs).not.toContain("printDocument");
+  });
 });
+

@@ -128,10 +128,12 @@
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
+  font-family: var(--font-sans);
   font-size: 0.78rem;
   line-height: 1;
   color: var(--text-secondary);
-  padding: 0.35rem 0.55rem;
+  height: 28px;
+  padding: 0 0.55rem;
   border-radius: 3px;
   border: 1px solid transparent;
   box-sizing: border-box;
@@ -150,6 +152,7 @@
   display: inline-flex;
   align-items: center;
   line-height: 1;
+  transform: translateY(0.5px);
 }
 
 .tool-btn:hover {
@@ -163,11 +166,6 @@
 
 .tool-btn:focus-visible {
   outline: 1px solid var(--border-focus);
-}
-
-.theme-btn {
-  font-family: var(--font-mono);
-  font-size: 0.76rem;
 }
 
 /* Primary Content Area */
@@ -419,6 +417,8 @@
 .sheet-action-item svg {
   display: block;
   flex-shrink: 0;
+  width: 18px;
+  height: 18px;
 }
 
 .sheet-action-item span {
