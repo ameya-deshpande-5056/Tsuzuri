@@ -75,6 +75,7 @@ class TsuzuriApp {
   private btnToggleWrap!: HTMLButtonElement;
 
   private toastTimeout: number | null = null;
+  private lastRenderedContent: string | null = null;
 
   constructor() {
     this.state = createInitialState();
@@ -268,6 +269,15 @@ class TsuzuriApp {
     // View Switcher (Editor ↔ Reader)
     this.btnViewReader.addEventListener("click", () => this.switchView("reader"));
     this.btnViewEditor.addEventListener("click", () => this.switchView("editor"));
+
+    // Document Title Tooltip & Path Info
+    this.docTitleEl.addEventListener("mouseenter", () => this.updateDocTitleTooltip());
+    this.docTitleEl.addEventListener("click", () => {
+      if (this.state.doc.path) {
+        this.showToast(this.state.doc.path);
+      }
+    });
+    window.addEventListener("resize", () => this.updateDocTitleTooltip());
 
     // File operations
     this.btnOpen.addEventListener("click", () => this.handleOpenFile());
@@ -463,8 +473,8 @@ class TsuzuriApp {
     if (this.state.activeView === newView) return;
 
     if (newView === "reader") {
-      // Switched to Reader: render current Markdown
-      await this.renderCurrentDocument();
+      this.state.activeView = "reader";
+      // 1. Immediately toggle DOM visibility so switch is instantaneous without delay
       this.editorView.style.display = "none";
       this.readerView.style.display = "flex";
       this.btnViewReader.classList.add("active");
@@ -474,8 +484,14 @@ class TsuzuriApp {
       this.btnToc.style.display = "inline-flex";
       this.closeFindBar();
       this.readerView.focus();
+
+      // 2. Only re-render if content has actually changed since last render
+      if (this.lastRenderedContent !== this.state.doc.content) {
+        await this.renderCurrentDocument();
+      }
     } else {
-      // Switched to Editor: reveal editor view first so container width is valid
+      this.state.activeView = "editor";
+      // 1. Immediately reveal editor view
       this.readerView.style.display = "none";
       this.editorView.style.display = "flex";
       this.btnViewEditor.classList.add("active");
@@ -485,12 +501,13 @@ class TsuzuriApp {
       this.btnToc.style.display = "none";
       this.nav.closeToc();
 
-      this.editor.setValue(this.state.doc.content);
+      // 2. Only set textarea value if out of sync to preserve user cursor & avoid unnecessary recalculations
+      if (this.editor.getValue() !== this.state.doc.content) {
+        this.editor.setValue(this.state.doc.content);
+      }
       this.editor.updateLineNumbers();
       this.editor.focus();
     }
-
-    this.state.activeView = newView;
   }
 
   private async renderCurrentDocument(): Promise<void> {
@@ -500,6 +517,7 @@ class TsuzuriApp {
       this.state.doc.directory
     );
     this.nav.updateHeadings(headings);
+    this.lastRenderedContent = this.state.doc.content;
   }
 
   public async printDocument(): Promise<void> {
@@ -672,6 +690,7 @@ class TsuzuriApp {
     this.docTitleEl.textContent = this.state.doc.fileName;
     this.dirtyIndicatorEl.style.display = this.state.doc.isDirty ? "inline" : "none";
     document.title = `${this.state.doc.fileName}${dirtySuffix} — Tsuzuri`;
+    this.updateDocTitleTooltip();
 
     if (this.state.doc.isDirty) {
       this.btnSave.classList.add("dirty");
@@ -679,6 +698,15 @@ class TsuzuriApp {
     } else {
       this.btnSave.classList.remove("dirty");
       this.sheetBtnSave.classList.remove("dirty");
+    }
+  }
+
+  private updateDocTitleTooltip(): void {
+    // Only display tooltip on hover when there is insufficient space to display full filename
+    if (this.docTitleEl.scrollWidth > this.docTitleEl.clientWidth) {
+      this.docTitleEl.title = this.state.doc.fileName;
+    } else {
+      this.docTitleEl.removeAttribute("title");
     }
   }
 

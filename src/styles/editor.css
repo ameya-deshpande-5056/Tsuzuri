@@ -70,6 +70,7 @@
   height: 28px;
   padding: 0 0.5rem;
   font-size: 0.75rem;
+  line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -212,13 +213,17 @@
 }
 
 .status-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 3px;
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  padding: 0.1rem 0.4rem;
+  line-height: 1;
+  padding: 0.15rem 0.45rem;
   cursor: pointer;
   transition: all 0.15s ease;
 }

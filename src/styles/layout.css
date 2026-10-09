@@ -14,9 +14,9 @@
 
 /* Minimalist App Header */
 .app-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   box-sizing: content-box;
   height: 44px;
   min-height: 44px;
@@ -35,6 +35,8 @@
   align-items: center;
   gap: 0.75rem;
   min-width: 0;
+  overflow: hidden;
+  justify-self: start;
 }
 
 .app-name {
@@ -50,6 +52,8 @@
   align-items: center;
   gap: 0.35rem;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .doc-title {
@@ -58,13 +62,15 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 200px;
+  min-width: 0;
+  cursor: default;
 }
 
 .dirty-indicator {
   font-size: 1.1rem;
   line-height: 1;
   color: var(--accent-primary);
+  flex-shrink: 0;
 }
 
 /* Center Segmented View Switcher (Editor ↔ Reader) */
@@ -72,6 +78,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  justify-self: center;
 }
 
 .view-switcher {
@@ -85,9 +92,13 @@
 }
 
 .view-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 0.78rem;
   font-weight: 500;
-  padding: 0.2rem 0.7rem;
+  line-height: 1;
+  padding: 0.28rem 0.75rem;
   border-radius: 3px;
   color: var(--text-secondary);
   transition: background-color 0.15s ease, color 0.15s ease;
@@ -107,19 +118,38 @@
 .header-right {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.35rem;
+  justify-self: end;
 }
 
 .tool-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem;
   font-size: 0.78rem;
+  line-height: 1;
   color: var(--text-secondary);
-  padding: 0.3rem 0.55rem;
+  padding: 0.35rem 0.55rem;
   border-radius: 3px;
   border: 1px solid transparent;
+  box-sizing: border-box;
+  vertical-align: middle;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.tool-btn svg {
+  display: block;
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+}
+
+.tool-btn .btn-label {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
 }
 
 .tool-btn:hover {
@@ -380,9 +410,21 @@
   color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 500;
+  line-height: 1;
   text-align: left;
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.sheet-action-item svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.sheet-action-item span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
 }
 
 .sheet-action-item:active {
@@ -417,8 +459,20 @@
   color: var(--text-secondary);
   font-size: 0.75rem;
   font-weight: 500;
+  line-height: 1;
   cursor: pointer;
   transition: all 0.15s ease;
+}
+
+.sheet-theme-btn svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.sheet-theme-btn span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
 }
 
 .sheet-theme-btn.active {
