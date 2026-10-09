@@ -29,6 +29,7 @@ describe("Zoom Management System", () => {
     expect(clampZoom(1.234)).toBe(1.2);
     expect(clampZoom(1.26)).toBe(1.3);
     expect(clampZoom(1.0)).toBe(1.0);
+    expect(ZOOM_STEP).toBe(0.1);
   });
 
   it("formats zoom level cleanly as percentage string", () => {

@@ -3,7 +3,6 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import fs from "fs";
 
 describe("Header Layout, Tooltip & View Switch Polishing", () => {
-  let header: HTMLElement;
   let docTitle: HTMLElement;
 
   beforeEach(() => {
@@ -28,7 +27,6 @@ describe("Header Layout, Tooltip & View Switch Polishing", () => {
         </div>
       </header>
     `;
-    header = document.getElementById("app-header") as HTMLElement;
     docTitle = document.getElementById("doc-title") as HTMLElement;
   });
 
@@ -125,6 +123,7 @@ describe("Header Layout, Tooltip & View Switch Polishing", () => {
     await loadNewDoc("# Document 2");
     // Verify Document 2 is immediately rendered without needing to switch to editor and back
     expect(renderedContent).toBe("# Document 2");
+    expect(lastRenderedContent).toBe("# Document 2");
     expect(fakeRender).toHaveBeenCalledTimes(2);
   });
 
