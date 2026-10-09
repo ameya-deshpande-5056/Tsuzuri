@@ -123,10 +123,10 @@ class TsuzuriApp {
     this.bindWheelZoom();
     this.bindDragAndDrop();
 
-    // Initial render
+    // Initial render & clean view enforcement
     this.updateTitleDisplay();
     this.updateMobileViewToggleDisplay();
-    await this.renderCurrentDocument();
+    await this.switchView("reader", true);
 
     // Setup interactive behaviors (links, copy buttons)
     setupInteractiveBehaviors(this.readerContent);
@@ -726,7 +726,9 @@ class TsuzuriApp {
 
     if (newView === "reader") {
       this.state.activeView = "reader";
-      // 1. Immediately toggle DOM visibility so switch is instantaneous without delay
+      // 1. Immediately toggle DOM visibility & active classes so switch is instantaneous without delay
+      this.editorView.classList.remove("active");
+      this.readerView.classList.add("active");
       this.editorView.style.display = "none";
       this.readerView.style.display = "flex";
       this.btnViewReader?.classList.add("active");
@@ -743,7 +745,9 @@ class TsuzuriApp {
       }
     } else {
       this.state.activeView = "editor";
-      // 1. Immediately reveal editor view
+      // 1. Immediately reveal editor view & active classes
+      this.readerView.classList.remove("active");
+      this.editorView.classList.add("active");
       this.readerView.style.display = "none";
       this.editorView.style.display = "flex";
       this.btnViewEditor?.classList.add("active");

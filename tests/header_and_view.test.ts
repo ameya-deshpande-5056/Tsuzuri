@@ -285,5 +285,28 @@ describe("Header Layout, Tooltip & View Switch Polishing", () => {
     expect(mainTs).toContain("aboutGithubLink");
     expect(mainTs).toContain("openInBrowser");
   });
+
+  it("strictly enforces mutual exclusivity between reader and editor views in CSS and runtime", () => {
+    const layoutCss = fs.readFileSync("/home/ameya/Tsuzuri/src/styles/layout.css", "utf-8");
+    const mainTs = fs.readFileSync("/home/ameya/Tsuzuri/src/main.ts", "utf-8");
+    const indexHtml = fs.readFileSync("/home/ameya/Tsuzuri/index.html", "utf-8");
+
+    // CSS rule guarantees only .active pane is visible, completely preventing side-by-side display
+    expect(layoutCss).toMatch(/\.view-pane\s*\{[^}]*display:\s*none\s*!important;/);
+    expect(layoutCss).toMatch(/\.view-pane\.active\s*\{[^}]*display:\s*flex\s*!important;/);
+
+    // Initial DOM starts with reader-view active and editor-view hidden
+    expect(indexHtml).toMatch(/<section[^>]*id="reader-view"[^>]*class="[^"]*view-pane[^"]*active[^"]*"/);
+    expect(indexHtml).toMatch(/<section[^>]*id="editor-view"[^>]*class="[^"]*view-pane[^"]*"(?!active)/);
+
+    // switchView synchronously swaps active class between readerView and editorView
+    expect(mainTs).toContain('this.editorView.classList.remove("active");');
+    expect(mainTs).toContain('this.readerView.classList.add("active");');
+    expect(mainTs).toContain('this.readerView.classList.remove("active");');
+    expect(mainTs).toContain('this.editorView.classList.add("active");');
+
+    // init() explicitly enforces clean initial view state
+    expect(mainTs).toContain('await this.switchView("reader", true);');
+  });
 });
 

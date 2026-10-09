@@ -182,11 +182,16 @@
   display: flex;
 }
 
-/* View Panes (Mutually Exclusive) */
+/* View Panes (Strictly Mutually Exclusive) */
 .view-pane {
+  display: none !important;
   width: 100%;
   height: 100%;
   box-sizing: border-box;
+}
+
+.view-pane.active {
+  display: flex !important;
 }
 
 /* Temporary Table of Contents Drawer */
