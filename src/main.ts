@@ -53,9 +53,7 @@ class TsuzuriApp {
   private btnCloseToc!: HTMLButtonElement;
   private toastEl!: HTMLElement;
 
-  // Zoom Controls
-  private btnZoomReset!: HTMLButtonElement | null;
-  private headerZoomValue!: HTMLElement | null;
+  // Zoom Controls (Menu / Sheet)
   private sheetBtnZoomIn!: HTMLButtonElement | null;
   private sheetBtnZoomOut!: HTMLButtonElement | null;
   private sheetBtnZoomReset!: HTMLButtonElement | null;
@@ -158,8 +156,6 @@ class TsuzuriApp {
     this.btnCloseToc = document.getElementById("btn-close-toc") as HTMLButtonElement;
     this.toastEl = document.getElementById("toast-notification") as HTMLElement;
 
-    this.btnZoomReset = document.getElementById("btn-zoom-reset") as HTMLButtonElement | null;
-    this.headerZoomValue = document.getElementById("header-zoom-value") as HTMLElement | null;
     this.sheetBtnZoomIn = document.getElementById("sheet-btn-zoom-in") as HTMLButtonElement | null;
     this.sheetBtnZoomOut = document.getElementById("sheet-btn-zoom-out") as HTMLButtonElement | null;
     this.sheetBtnZoomReset = document.getElementById("sheet-btn-zoom-reset") as HTMLButtonElement | null;
@@ -255,15 +251,6 @@ class TsuzuriApp {
     }
     if (this.menuZoomSlider) {
       this.menuZoomSlider.value = String(Math.round(zoom * 100));
-    }
-    if (this.btnZoomReset && this.headerZoomValue) {
-      if (Math.abs(zoom - 1.0) > 0.01) {
-        this.headerZoomValue.textContent = formatted;
-        this.btnZoomReset.style.display = "inline-flex";
-        this.btnZoomReset.title = `Reset Zoom (${formatted} → 100%) (Ctrl+0)`;
-      } else {
-        this.btnZoomReset.style.display = "none";
-      }
     }
   }
 
@@ -485,13 +472,6 @@ class TsuzuriApp {
       this.sheetBtnViewMode.addEventListener("click", () => {
         this.closeMobileSheet();
         this.switchView(this.state.activeView === "reader" ? "editor" : "reader");
-      });
-    }
-
-    if (this.btnZoomReset) {
-      this.btnZoomReset.addEventListener("click", () => {
-        resetZoom();
-        this.showToast("Zoom: 100% (Reset)");
       });
     }
 

@@ -163,14 +163,16 @@ describe("Header Layout, Tooltip & View Switch Polishing", () => {
     expect(mainTs).toContain("Reader View");
   });
 
-  it("provides zoom controls in mobile sheet and header indicator with shortcuts", () => {
+  it("provides zoom controls in actions menu with shortcuts, keeping header clean with 3 buttons", () => {
     const indexHtml = fs.readFileSync("/home/ameya/Tsuzuri/index.html", "utf-8");
     const mainTs = fs.readFileSync("/home/ameya/Tsuzuri/src/main.ts", "utf-8");
     const layoutCss = fs.readFileSync("/home/ameya/Tsuzuri/src/styles/layout.css", "utf-8");
 
-    // Zoom controls in index.html
-    expect(indexHtml).toContain('id="btn-zoom-reset"');
-    expect(indexHtml).toContain('id="header-zoom-value"');
+    // Header is kept clean without zoom indicator numbers
+    expect(indexHtml).not.toContain('id="btn-zoom-reset"');
+    expect(indexHtml).not.toContain('id="header-zoom-value"');
+
+    // Zoom controls in actions menu
     expect(indexHtml).toContain('id="sheet-btn-zoom-in"');
     expect(indexHtml).toContain('id="sheet-btn-zoom-out"');
     expect(indexHtml).toContain('id="sheet-btn-zoom-reset"');
@@ -191,7 +193,7 @@ describe("Header Layout, Tooltip & View Switch Polishing", () => {
     expect(mainTs).toContain("initZoomSystem");
     expect(mainTs).toContain("bindWheelZoom");
     expect(mainTs).toContain("sheetBtnZoomIn");
-    expect(mainTs).toContain("btnZoomReset");
+    expect(mainTs).not.toContain("btnZoomReset");
     expect(mainTs).toContain("menuZoomSlider");
   });
 
