@@ -1,6 +1,6 @@
 {
   "name": "tsuzuri",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "A lightweight, offline, cross-platform Markdown document reader and editor",
   "type": "module",
   "scripts": {
