@@ -114,6 +114,28 @@
   flex-shrink: 0;
   width: 18px;
   height: 18px;
+  shape-rendering: geometricPrecision;
+}
+
+/* UI SVG Icons - Prevent stroke distortion under CSS zoom in WebKit/Blink engines */
+.tool-btn svg:not([fill="currentColor"]) path,
+.tool-btn svg:not([fill="currentColor"]) line,
+.tool-btn svg:not([fill="currentColor"]) polyline,
+.tool-btn svg:not([fill="currentColor"]) rect,
+.tool-btn svg:not([fill="currentColor"]) circle,
+.sheet-action-item svg path,
+.sheet-action-item svg line,
+.sheet-action-item svg polyline,
+.sheet-action-item svg rect,
+.sheet-action-item svg circle,
+.menu-zoom-btn svg line,
+.menu-zoom-btn svg path,
+.sheet-zoom-btn svg line,
+.sheet-theme-btn svg rect,
+.sheet-theme-btn svg line,
+.sheet-theme-btn svg circle,
+.sheet-theme-btn svg path {
+  stroke-width: 1.8px;
 }
 
 .tool-btn .btn-label {
@@ -384,6 +406,7 @@
   flex-shrink: 0;
   width: 18px;
   height: 18px;
+  shape-rendering: geometricPrecision;
 }
 
 .sheet-action-item span {
@@ -433,6 +456,7 @@
 .sheet-theme-btn svg {
   display: block;
   flex-shrink: 0;
+  shape-rendering: geometricPrecision;
 }
 
 .sheet-theme-btn span {
@@ -503,6 +527,7 @@
   flex-shrink: 0;
   width: 14px;
   height: 14px;
+  shape-rendering: geometricPrecision;
 }
 
 .menu-zoom-btn:hover,
