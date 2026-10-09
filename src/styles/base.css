@@ -140,7 +140,6 @@ body {
   margin: 0;
   padding: 0;
   width: 100%;
-  max-width: 100vw;
   height: 100%;
   overflow-x: hidden;
   background-color: var(--bg-canvas);
@@ -156,6 +155,12 @@ body {
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure KaTeX internal layout engine calculates strut heights and positions accurately */
+.katex,
+.katex * {
+  box-sizing: content-box !important;
 }
 
 button {

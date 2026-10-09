@@ -265,18 +265,25 @@ pre.hljs:focus-within .code-copy-btn {
   padding: 0.5rem 0;
   text-align: center;
   box-sizing: border-box;
-  content-visibility: auto;
-  contain-intrinsic-size: 60px;
 }
 
 .katex-display {
+  display: block;
   max-width: 100%;
   margin: 0 !important;
+  text-align: center;
 }
 
 .katex {
   font-size: 1.05em;
   max-width: 100%;
+  line-height: 1.2;
+  white-space: normal;
+  text-rendering: auto;
+}
+
+.katex-html {
+  position: relative;
 }
 
 .katex-display-wrapper svg,
@@ -303,8 +310,6 @@ pre.hljs:focus-within .code-copy-btn {
   justify-content: center;
   align-items: center;
   box-sizing: border-box;
-  content-visibility: auto;
-  contain-intrinsic-size: 260px;
 }
 
 .mermaid-svg-wrapper {
@@ -312,7 +317,9 @@ pre.hljs:focus-within .code-copy-btn {
   max-width: 100%;
   display: flex;
   justify-content: center;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .mermaid-svg-wrapper svg {

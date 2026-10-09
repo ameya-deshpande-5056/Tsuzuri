@@ -24,6 +24,23 @@ export function applyZoomToDom(zoom: number): void {
   currentZoom = clampZoom(zoom);
   if (typeof document !== "undefined" && document.documentElement) {
     document.documentElement.style.zoom = String(currentZoom);
+    if (currentZoom < 1.0) {
+      const invPercent = `${(100 / currentZoom).toFixed(4)}%`;
+      document.documentElement.style.width = invPercent;
+      document.documentElement.style.height = invPercent;
+      if (document.body) {
+        document.body.style.width = "100%";
+        document.body.style.height = "100%";
+      }
+    } else {
+      document.documentElement.style.width = "100%";
+      document.documentElement.style.height = "100%";
+      if (document.body) {
+        document.body.style.width = "100%";
+        document.body.style.height = "100%";
+      }
+    }
+    document.documentElement.style.setProperty("--app-zoom", String(currentZoom));
     try {
       localStorage.setItem(ZOOM_STORAGE_KEY, String(currentZoom));
     } catch {

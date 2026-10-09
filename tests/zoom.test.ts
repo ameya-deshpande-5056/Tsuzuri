@@ -105,4 +105,18 @@ describe("Zoom Management System", () => {
     const initial = initZoom();
     expect(initial).toBe(DEFAULT_ZOOM);
   });
+
+  it("scales document dimensions when zoom < 1.0 to prevent shrinking/letterboxing", () => {
+    setZoom(0.8);
+    expect(document.documentElement.style.zoom).toBe("0.8");
+    expect(document.documentElement.style.width).toBe("125%");
+    expect(document.documentElement.style.height).toBe("125%");
+    expect(document.documentElement.style.getPropertyValue("--app-zoom")).toBe("0.8");
+
+    setZoom(1.0);
+    expect(document.documentElement.style.zoom).toBe("1");
+    expect(document.documentElement.style.width).toBe("100%");
+    expect(document.documentElement.style.height).toBe("100%");
+    expect(document.documentElement.style.getPropertyValue("--app-zoom")).toBe("1");
+  });
 });
