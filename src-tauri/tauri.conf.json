@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Tsuzuri",
-  "version": "1.0.6",
+  "version": "1.0.10",
   "identifier": "io.github.ameyadeshpande.tsuzuri",
   "build": {
     "frontendDist": "../dist",
@@ -100,7 +100,7 @@
     },
     "android": {
       "debugApplicationIdSuffix": ".debug",
-      "versionCode": 1000006
+      "versionCode": 1000010
     }
   }
 }

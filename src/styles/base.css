@@ -157,12 +157,6 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Ensure KaTeX internal layout engine calculates strut heights and positions accurately */
-.katex,
-.katex * {
-  box-sizing: content-box !important;
-}
-
 button {
   font: inherit;
   cursor: pointer;

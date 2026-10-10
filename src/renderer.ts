@@ -344,7 +344,7 @@ function renderTex(tex: string, display: boolean): string {
       displayMode: display,
       throwOnError: false,
       errorColor: "#ef4444",
-      output: "htmlAndMathml",
+      output: "html",
       strict: false,
     });
     katexCache.set(cacheKey, rendered);
@@ -445,119 +445,27 @@ function ensureMermaidInitialized(isDark: boolean): void {
     mermaid.initialize({
       startOnLoad: false,
       securityLevel: "loose",
-      theme: "base",
+      theme: isDark ? "dark" : "neutral",
       themeVariables: isDark
         ? {
             darkMode: true,
             background: "#000000",
             primaryColor: "#27272a",
-            primaryTextColor: "#ffffff",
-            primaryBorderColor: "#71717a",
-            lineColor: "#e4e4e7",
+            primaryTextColor: "#f4f4f5",
+            primaryBorderColor: "#3f3f46",
+            lineColor: "#71717a",
             secondaryColor: "#18181b",
-            tertiaryColor: "#111113",
-            // Flowchart & general nodes
-            mainBkg: "#27272a",
-            nodeBkg: "#27272a",
-            nodeTextColor: "#ffffff",
-            nodeBorder: "#71717a",
-            clusterBkg: "#141416",
-            clusterBorder: "#52525b",
-            defaultLinkColor: "#e4e4e7",
-            titleColor: "#ffffff",
-            edgeLabelBackground: "#27272a",
-            // Sequence diagram
-            actorBkg: "#27272a",
-            actorBorder: "#71717a",
-            actorTextColor: "#ffffff",
-            actorLineColor: "#e4e4e7",
-            signalColor: "#ffffff",
-            signalTextColor: "#ffffff",
-            labelBoxBkgColor: "#27272a",
-            labelBoxBorderColor: "#71717a",
-            labelTextColor: "#ffffff",
-            loopTextColor: "#ffffff",
-            noteBkgColor: "#27272a",
-            noteTextColor: "#ffffff",
-            noteBorderColor: "#71717a",
-            // State & Class diagram
-            stateBkg: "#27272a",
-            stateLabelColor: "#ffffff",
-            classText: "#ffffff",
-            // Pie chart
-            pieTitleTextColor: "#ffffff",
-            pieSectionTextColor: "#ffffff",
-            pieLegendTextColor: "#ffffff",
-            pieStrokeColor: "#000000",
-            pieStrokeWidth: "2px",
-            pie1: "#3b82f6",
-            pie2: "#10b981",
-            pie3: "#f59e0b",
-            pie4: "#ef4444",
-            pie5: "#8b5cf6",
-            pie6: "#ec4899",
-            pie7: "#06b6d4",
-            pie8: "#14b8a6",
-            pie9: "#6366f1",
-            pie10: "#84cc16",
-            pie11: "#f97316",
-            pie12: "#0ea5e9",
+            tertiaryColor: "#09090b",
           }
         : {
             darkMode: false,
             background: "#ffffff",
             primaryColor: "#f4f4f5",
-            primaryTextColor: "#09090b",
-            primaryBorderColor: "#a1a1aa",
-            lineColor: "#3f3f46",
-            secondaryColor: "#ffffff",
-            tertiaryColor: "#fafafa",
-            // Flowchart & general nodes
-            mainBkg: "#ffffff",
-            nodeBkg: "#ffffff",
-            nodeTextColor: "#09090b",
-            nodeBorder: "#a1a1aa",
-            clusterBkg: "#f4f4f5",
-            clusterBorder: "#d4d4d8",
-            defaultLinkColor: "#3f3f46",
-            titleColor: "#09090b",
-            edgeLabelBackground: "#ffffff",
-            // Sequence diagram
-            actorBkg: "#ffffff",
-            actorBorder: "#a1a1aa",
-            actorTextColor: "#09090b",
-            actorLineColor: "#3f3f46",
-            signalColor: "#09090b",
-            signalTextColor: "#09090b",
-            labelBoxBkgColor: "#ffffff",
-            labelBoxBorderColor: "#a1a1aa",
-            labelTextColor: "#09090b",
-            loopTextColor: "#09090b",
-            noteBkgColor: "#fef9c3",
-            noteTextColor: "#09090b",
-            noteBorderColor: "#ca8a04",
-            // State & Class diagram
-            stateBkg: "#ffffff",
-            stateLabelColor: "#09090b",
-            classText: "#09090b",
-            // Pie chart
-            pieTitleTextColor: "#09090b",
-            pieSectionTextColor: "#ffffff",
-            pieLegendTextColor: "#09090b",
-            pieStrokeColor: "#ffffff",
-            pieStrokeWidth: "2px",
-            pie1: "#2563eb",
-            pie2: "#059669",
-            pie3: "#d97706",
-            pie4: "#dc2626",
-            pie5: "#7c3aed",
-            pie6: "#db2777",
-            pie7: "#0891b2",
-            pie8: "#0d9488",
-            pie9: "#4f46e5",
-            pie10: "#65a30d",
-            pie11: "#ea580c",
-            pie12: "#0284c7",
+            primaryTextColor: "#18181b",
+            primaryBorderColor: "#d4d4d8",
+            lineColor: "#71717a",
+            secondaryColor: "#f8fafc",
+            tertiaryColor: "#ffffff",
           },
       fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     });
@@ -568,33 +476,28 @@ function ensureMermaidInitialized(isDark: boolean): void {
 
 // In-memory cache for rendered Mermaid SVGs: key = `${theme}:${rawSource}` -> SVG markup
 const mermaidSvgCache = new Map<string, string>();
-let activeMermaidObserver: IntersectionObserver | null = null;
 
-// Render Mermaid diagrams inside a container with viewport-lazy rendering and caching
+// Render all Mermaid diagrams inside a container with caching and non-blocking event loop yielding
 export async function renderMermaidDiagrams(container: HTMLElement, forceAll: boolean = false): Promise<void> {
   const isDark = isDarkModeActive();
   ensureMermaidInitialized(isDark);
 
-  if (activeMermaidObserver) {
-    activeMermaidObserver.disconnect();
-    activeMermaidObserver = null;
-  }
-
   const diagramNodes = container.querySelectorAll<HTMLElement>(".mermaid-diagram");
   if (!diagramNodes.length) return;
 
-  const renderSingleDiagram = async (node: HTMLElement): Promise<void> => {
-    if (node.dataset.rendered === "true") return;
+  for (const node of diagramNodes) {
+    if (node.dataset.rendered === "true" && !forceAll) continue;
 
     const rawSource = node.querySelector(".mermaid-source")?.textContent?.trim() || node.dataset.rawSource || "";
-    if (!rawSource) return;
+    if (!rawSource) continue;
+    node.dataset.rawSource = rawSource;
 
     const cacheKey = `${isDark ? "dark" : "light"}:${rawSource}`;
     const cached = mermaidSvgCache.get(cacheKey);
     if (cached) {
       node.innerHTML = `<div class="mermaid-svg-wrapper">${cached}</div>`;
       node.dataset.rendered = "true";
-      return;
+      continue;
     }
 
     const diagramId = `mmd-${Math.random().toString(36).slice(2, 10)}`;
@@ -616,48 +519,9 @@ export async function renderMermaidDiagrams(container: HTMLElement, forceAll: bo
       `;
       node.dataset.rendered = "true";
     }
-  };
 
-  // If forceAll is requested (e.g. before print) or in headless/JSDOM test environments without IntersectionObserver
-  if (forceAll || typeof IntersectionObserver === "undefined") {
-    for (const node of diagramNodes) {
-      await renderSingleDiagram(node);
-      // Yield to event loop to keep the UI interactive and avoid freezing
-      if (diagramNodes.length > 3) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      }
-    }
-    return;
-  }
-
-  // Viewport-Lazy rendering with IntersectionObserver (800px prefetch rootMargin)
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const target = entry.target as HTMLElement;
-          observer.unobserve(target);
-          renderSingleDiagram(target);
-        }
-      });
-    },
-    {
-      rootMargin: "800px 0px 800px 0px",
-      threshold: 0,
-    }
-  );
-
-  activeMermaidObserver = observer;
-
-  for (const node of diagramNodes) {
-    const rawSource = node.querySelector(".mermaid-source")?.textContent?.trim() || "";
-    node.dataset.rawSource = rawSource;
-
-    const cacheKey = `${isDark ? "dark" : "light"}:${rawSource}`;
-    if (mermaidSvgCache.has(cacheKey)) {
-      renderSingleDiagram(node);
-    } else {
-      observer.observe(node);
+    if (diagramNodes.length > 3) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
     }
   }
 }

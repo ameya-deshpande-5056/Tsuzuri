@@ -434,6 +434,34 @@ flowchart LR
     expect(mathWrapper?.closest("pre")).toBeNull();
     expect(mathWrapper?.closest("code")).toBeNull();
   });
+
+  it("renders LaTeX math as pure deterministic HTML without MathML overhead", async () => {
+    const md = `$$E = mc^2$$`;
+    await renderDocument(md, container, null);
+
+    const katexEl = container.querySelector(".katex");
+    expect(katexEl).not.toBeNull();
+    const htmlEl = container.querySelector(".katex-html");
+    expect(htmlEl).not.toBeNull();
+    const mathmlEl = container.querySelector(".katex-mathml");
+    expect(mathmlEl).toBeNull();
+  });
+
+  it("renders complex matrix environments with KaTeX", async () => {
+    const md = `
+$$
+\\begin{pmatrix}
+1 & 0 \\\\
+0 & 1
+\\end{pmatrix}
+$$
+`;
+    await renderDocument(md, container, null);
+
+    const katexEl = container.querySelector(".katex");
+    expect(katexEl).not.toBeNull();
+    expect(container.querySelector(".katex-error")).toBeNull();
+  });
 });
 
 

@@ -277,13 +277,6 @@ pre.hljs:focus-within .code-copy-btn {
 .katex {
   font-size: 1.05em;
   max-width: 100%;
-  line-height: 1.2;
-  white-space: normal;
-  text-rendering: auto;
-}
-
-.katex-html {
-  position: relative;
 }
 
 .katex-error {
