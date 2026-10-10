@@ -40,14 +40,15 @@ describe("Zoom Management System", () => {
     expect(formatZoom(2.0)).toBe("200%");
   });
 
-  it("sets zoom and applies style to view-panes and TOC and persists to localStorage", () => {
+  it("sets zoom and applies a transform-based scale instead of CSS zoom for cross-engine compatibility", () => {
     const val = setZoom(1.3);
     expect(val).toBe(1.3);
     expect(getZoom()).toBe(1.3);
     expect(document.documentElement.style.getPropertyValue("--app-zoom")).toBe("1.3");
-    expect(document.getElementById("reader-view")?.style.zoom).toBe("1.3");
-    expect(document.getElementById("editor-view")?.style.zoom).toBe("1.3");
-    expect(document.getElementById("toc-list")?.style.zoom).toBe("1.3");
+    expect(document.documentElement.style.zoom).toBe("");
+    expect(document.getElementById("reader-view")?.style.transform).toBe("scale(1.3)");
+    expect(document.getElementById("editor-view")?.style.transform).toBe("scale(1.3)");
+    expect(document.getElementById("toc-list")?.style.transform).toBe("scale(1.3)");
     expect(localStorage.getItem(ZOOM_STORAGE_KEY)).toBe("1.3");
   });
 
@@ -83,7 +84,7 @@ describe("Zoom Management System", () => {
     resetZoom();
     expect(getZoom()).toBe(DEFAULT_ZOOM);
     expect(document.documentElement.style.getPropertyValue("--app-zoom")).toBe("1");
-    expect(document.getElementById("reader-view")?.style.zoom).toBe("1");
+    expect(document.getElementById("reader-view")?.style.transform).toBe("scale(1)");
   });
 
   it("notifies registered change listeners when zoom changes", () => {
@@ -103,7 +104,7 @@ describe("Zoom Management System", () => {
     const initial = initZoom();
     expect(initial).toBe(1.5);
     expect(document.documentElement.style.getPropertyValue("--app-zoom")).toBe("1.5");
-    expect(document.getElementById("reader-view")?.style.zoom).toBe("1.5");
+    expect(document.getElementById("reader-view")?.style.transform).toBe("scale(1.5)");
   });
 
   it("initializes to DEFAULT_ZOOM if localStorage is empty or invalid", () => {
@@ -117,12 +118,12 @@ describe("Zoom Management System", () => {
     expect(document.documentElement.style.width).toBe("100%");
     expect(document.documentElement.style.height).toBe("100%");
     expect(document.documentElement.style.getPropertyValue("--app-zoom")).toBe("0.8");
-    expect(document.getElementById("reader-view")?.style.zoom).toBe("0.8");
+    expect(document.getElementById("reader-view")?.style.transform).toBe("scale(0.8)");
 
     setZoom(1.0);
     expect(document.documentElement.style.width).toBe("100%");
     expect(document.documentElement.style.height).toBe("100%");
     expect(document.documentElement.style.getPropertyValue("--app-zoom")).toBe("1");
-    expect(document.getElementById("reader-view")?.style.zoom).toBe("1");
+    expect(document.getElementById("reader-view")?.style.transform).toBe("scale(1)");
   });
 });

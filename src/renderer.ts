@@ -445,29 +445,44 @@ function ensureMermaidInitialized(isDark: boolean): void {
     mermaid.initialize({
       startOnLoad: false,
       securityLevel: "loose",
-      theme: isDark ? "dark" : "neutral",
+      theme: "base",
       themeVariables: isDark
         ? {
             darkMode: true,
-            background: "#000000",
-            primaryColor: "#27272a",
+            background: "transparent",
+            primaryColor: "#1f2937",
             primaryTextColor: "#f4f4f5",
-            primaryBorderColor: "#3f3f46",
-            lineColor: "#71717a",
-            secondaryColor: "#18181b",
-            tertiaryColor: "#09090b",
+            primaryBorderColor: "#5b6472",
+            lineColor: "#a1a1aa",
+            secondaryColor: "#0f172a",
+            tertiaryColor: "#111827",
+            clusterBkg: "transparent",
+            clusterBorder: "#3f3f46",
+            fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           }
         : {
             darkMode: false,
-            background: "#ffffff",
+            background: "transparent",
             primaryColor: "#f4f4f5",
             primaryTextColor: "#18181b",
             primaryBorderColor: "#d4d4d8",
-            lineColor: "#71717a",
-            secondaryColor: "#f8fafc",
+            lineColor: "#52525b",
+            secondaryColor: "#eef2ff",
             tertiaryColor: "#ffffff",
+            clusterBkg: "transparent",
+            clusterBorder: "#d4d4d8",
+            fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           },
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+      },
       fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      themeCSS: `
+        svg { background: transparent; }
+        .node rect, .node circle, .node ellipse, .node polygon, .node path { stroke-width: 1.5px; }
+        .edgePath .path { stroke-width: 1.5px; }
+      `,
     });
     mermaidInitialized = true;
     currentMermaidDark = isDark;

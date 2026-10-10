@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import mermaid from "mermaid";
 import { renderDocument, extractHeadings, slugify } from "../src/renderer";
 
 describe("Tsuzuri Renderer & Pipeline", () => {
@@ -161,6 +162,63 @@ flowchart LR
     expect(katex).not.toBeNull();
     const mermaid = container.querySelector(".mermaid-diagram");
     expect(mermaid).not.toBeNull();
+  });
+
+  it("renders KaTeX and Mermaid cleanly in the Android packaged dark-mode WebView path", async () => {
+    const originalMatchMedia = window.matchMedia;
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: (query: string) => ({
+        matches: query.includes("dark"),
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }),
+    });
+
+    document.documentElement.setAttribute("data-theme", "dark");
+    document.documentElement.classList.add("dark");
+
+    const md = `
+## Android smoke test
+
+$$
+E = mc^2
+$$
+
+\`\`\`mermaid
+flowchart TD
+    A[Document] --> B[KaTeX & Mermaid]
+\`\`\`
+`;
+
+    const mermaidRenderSpy = vi.spyOn(mermaid, "render").mockResolvedValue({
+      svg: '<svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="80" fill="transparent" /><text x="10" y="30">Android smoke</text></svg>',
+    } as any);
+
+    try {
+      await renderDocument(md, container, null);
+
+      expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
+      expect(container.querySelector(".katex-display-wrapper")).not.toBeNull();
+      expect(container.querySelector(".katex-display")?.textContent).toMatch(/E.*mc.*2/i);
+
+      const mermaidDiagram = container.querySelector(".mermaid-diagram");
+      expect(mermaidDiagram).not.toBeNull();
+      expect(mermaidDiagram?.getAttribute("data-rendered")).toBe("true");
+      expect(container.querySelector(".mermaid-fallback-box")).toBeNull();
+      expect(container.querySelector(".mermaid-svg-wrapper svg")).not.toBeNull();
+    } finally {
+      mermaidRenderSpy.mockRestore();
+      Object.defineProperty(window, "matchMedia", {
+        writable: true,
+        value: originalMatchMedia,
+      });
+    }
   });
 
   it("handles broken/invalid LaTeX gracefully without throwing", async () => {

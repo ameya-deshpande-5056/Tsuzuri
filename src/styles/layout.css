@@ -189,7 +189,10 @@
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  zoom: var(--app-zoom, 1);
+  transform: scale(var(--app-zoom, 1));
+  transform-origin: top left;
+  width: calc(100% / var(--app-zoom, 1));
+  height: calc(100% / var(--app-zoom, 1));
 }
 
 .view-pane.active {
@@ -237,7 +240,9 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-muted);
-  zoom: var(--app-zoom, 1);
+  transform: scale(var(--app-zoom, 1));
+  transform-origin: top left;
+  width: calc(100% / var(--app-zoom, 1));
 }
 
 .close-toc-btn {
@@ -252,7 +257,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  zoom: var(--app-zoom, 1);
+  transform: scale(var(--app-zoom, 1));
+  transform-origin: top left;
+  width: calc(100% / var(--app-zoom, 1));
 }
 
 .toc-empty {

@@ -1,6 +1,6 @@
 [package]
 name = "tsuzuri"
-version = "1.0.10"
+version = "1.0.11"
 description = "A lightweight, offline, cross-platform Markdown document reader and editor"
 authors = ["Ameya Deshpande"]
 license = "GPL-3.0"

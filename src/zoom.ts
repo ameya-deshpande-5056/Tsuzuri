@@ -20,13 +20,23 @@ export function getZoom(): number {
   return currentZoom;
 }
 
+function applyScaleToElement(element: HTMLElement | null, zoom: number): void {
+  if (!element) return;
+
+  element.style.removeProperty("zoom");
+  element.style.transform = `scale(${zoom})`;
+  element.style.transformOrigin = "top left";
+  element.style.width = `${100 / zoom}%`;
+  element.style.height = `${100 / zoom}%`;
+}
+
 export function applyZoomToDom(zoom: number): void {
   currentZoom = clampZoom(zoom);
   if (typeof document !== "undefined") {
     // Keep document root strictly at 100% width and height so the app chrome (header, buttons, drawers, modals)
     // is never distorted, pushed off-screen, or given artificial horizontal overflow.
     if (document.documentElement) {
-      document.documentElement.style.zoom = "";
+      document.documentElement.style.removeProperty("zoom");
       document.documentElement.style.width = "100%";
       document.documentElement.style.height = "100%";
       document.documentElement.style.setProperty("--app-zoom", String(currentZoom));
@@ -36,19 +46,20 @@ export function applyZoomToDom(zoom: number): void {
       document.body.style.height = "100%";
     }
 
-    // Apply zoom directly to the content view panes (reader and editor) and table of contents
+    // Apply zoom as a transform instead of CSS zoom, which is not consistently implemented
+    // across Chromium-based WebViews (notably Android/Tauri production builds).
     const viewPanes = document.querySelectorAll<HTMLElement>(".view-pane");
     viewPanes.forEach((pane) => {
-      pane.style.zoom = String(currentZoom);
+      applyScaleToElement(pane, currentZoom);
     });
 
     const tocList = document.getElementById("toc-list");
     if (tocList) {
-      tocList.style.zoom = String(currentZoom);
+      applyScaleToElement(tocList, currentZoom);
     }
     const tocHeading = document.querySelector<HTMLElement>(".toc-heading");
     if (tocHeading) {
-      tocHeading.style.zoom = String(currentZoom);
+      applyScaleToElement(tocHeading, currentZoom);
     }
 
     try {
