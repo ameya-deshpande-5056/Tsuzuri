@@ -6,7 +6,7 @@ import "./styles/editor.css";
 
 import { createInitialState, AppState, ViewMode, ThemeMode } from "./state";
 import { initTheme, setTheme, getTheme } from "./theme";
-import { renderDocument, setupInteractiveBehaviors } from "./renderer";
+import { renderDocument, setupInteractiveBehaviors, clearMermaidCache } from "./renderer";
 import { MarkdownEditor } from "./editor";
 import { NavigationManager } from "./navigation";
 import {
@@ -214,6 +214,7 @@ class TsuzuriApp {
 
   private initThemeSystem(): void {
     initTheme(this.state.themeMode, async () => {
+      clearMermaidCache();
       this.updateThemeButtonDisplay();
       if (this.state.activeView === "reader") {
         await this.renderCurrentDocument();

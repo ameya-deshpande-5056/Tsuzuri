@@ -286,12 +286,6 @@ pre.hljs:focus-within .code-copy-btn {
   position: relative;
 }
 
-.katex-display-wrapper svg,
-.katex svg {
-  max-width: 100% !important;
-  height: auto !important;
-}
-
 .katex-error {
   color: var(--danger-color);
   font-family: var(--font-mono);

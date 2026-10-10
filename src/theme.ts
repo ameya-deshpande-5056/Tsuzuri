@@ -72,6 +72,11 @@ export function getTheme(): ThemeMode {
 }
 
 export function isDarkModeActive(): boolean {
+  if (typeof document !== "undefined" && document.documentElement) {
+    const dataTheme = document.documentElement.getAttribute("data-theme");
+    if (dataTheme === "dark") return true;
+    if (dataTheme === "light") return false;
+  }
   if (currentMode === "dark") return true;
   if (currentMode === "light") return false;
   const mq = ensureMediaQuery();

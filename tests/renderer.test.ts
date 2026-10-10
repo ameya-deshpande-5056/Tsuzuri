@@ -403,5 +403,37 @@ int main() { return 0; }
     expect(codeBlocks[0].className).toContain("language-js");
     expect(codeBlocks[1].className).toContain("language-cpp");
   });
+
+  it("renders Mermaid diagrams directly without invalid pre-code wrapping", async () => {
+    const md = `
+\`\`\`mermaid
+flowchart LR
+    A[Start] --> B[End]
+\`\`\`
+`;
+    await renderDocument(md, container, null);
+
+    const diagram = container.querySelector(".mermaid-diagram");
+    expect(diagram).not.toBeNull();
+    // Must NOT be wrapped inside <pre> or <code> tag
+    expect(diagram?.closest("pre")).toBeNull();
+    expect(diagram?.closest("code")).toBeNull();
+    expect(container.querySelector("code > .mermaid-diagram")).toBeNull();
+  });
+
+  it("renders math code fences directly without pre-code wrapping", async () => {
+    const md = `
+\`\`\`math
+\\sqrt{\\pi} + 1
+\`\`\`
+`;
+    await renderDocument(md, container, null);
+
+    const mathWrapper = container.querySelector(".katex-display-wrapper");
+    expect(mathWrapper).not.toBeNull();
+    expect(mathWrapper?.closest("pre")).toBeNull();
+    expect(mathWrapper?.closest("code")).toBeNull();
+  });
 });
+
 

@@ -281,6 +281,29 @@ const md = new MarkdownIt({
 md.use(footnotePlugin);
 md.use(taskListsPlugin, { enabled: true, label: true, labelAfter: false });
 
+// Custom fence renderer to ensure mermaid and math blocks render directly as top-level containers
+// without being incorrectly wrapped in <pre><code class="language-...">
+const defaultFenceRenderer =
+  md.renderer.rules.fence ||
+  ((tokens, idx, options, _env, self) => self.renderToken(tokens, idx, options));
+
+md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+  const token = tokens[idx];
+  const info = token.info ? token.info.trim() : "";
+  const lang = info.split(/\s+/)[0].toLowerCase();
+
+  if (lang === "mermaid") {
+    const id = `mermaid-${Math.random().toString(36).slice(2, 10)}`;
+    return `<div class="mermaid-diagram" data-id="${id}"><pre class="mermaid-source">${escapeHtml(token.content)}</pre></div>\n`;
+  }
+
+  if (lang === "math" || lang === "katex") {
+    return `<div class="katex-display-wrapper">${renderTex(token.content.trim(), true)}</div>\n`;
+  }
+
+  return defaultFenceRenderer(tokens, idx, options, env, self);
+};
+
 // Custom table renderer to ensure responsive container
 const originalTableOpen = md.renderer.rules.table_open || ((tokens, idx, options, _env, self) => self.renderToken(tokens, idx, options));
 const originalTableClose = md.renderer.rules.table_close || ((tokens, idx, options, _env, self) => self.renderToken(tokens, idx, options));
@@ -411,6 +434,12 @@ export function getLastHeadings(): HeadingItem[] {
 let mermaidInitialized = false;
 let currentMermaidDark: boolean | null = null;
 
+export function clearMermaidCache(): void {
+  mermaidSvgCache.clear();
+  mermaidInitialized = false;
+  currentMermaidDark = null;
+}
+
 function ensureMermaidInitialized(isDark: boolean): void {
   if (!mermaidInitialized || currentMermaidDark !== isDark) {
     mermaid.initialize({
@@ -421,44 +450,44 @@ function ensureMermaidInitialized(isDark: boolean): void {
         ? {
             darkMode: true,
             background: "#000000",
-            primaryColor: "#1c1c22",
-            primaryTextColor: "#f4f4f5",
-            primaryBorderColor: "#52525b",
-            lineColor: "#a1a1aa",
-            secondaryColor: "#27272a",
-            tertiaryColor: "#141417",
+            primaryColor: "#27272a",
+            primaryTextColor: "#ffffff",
+            primaryBorderColor: "#71717a",
+            lineColor: "#e4e4e7",
+            secondaryColor: "#18181b",
+            tertiaryColor: "#111113",
             // Flowchart & general nodes
-            mainBkg: "#1c1c22",
-            nodeBkg: "#1c1c22",
-            nodeTextColor: "#f4f4f5",
-            nodeBorder: "#52525b",
-            clusterBkg: "#0d0d10",
-            clusterBorder: "#3f3f46",
-            defaultLinkColor: "#a1a1aa",
-            titleColor: "#f4f4f5",
-            edgeLabelBackground: "#18181b",
+            mainBkg: "#27272a",
+            nodeBkg: "#27272a",
+            nodeTextColor: "#ffffff",
+            nodeBorder: "#71717a",
+            clusterBkg: "#141416",
+            clusterBorder: "#52525b",
+            defaultLinkColor: "#e4e4e7",
+            titleColor: "#ffffff",
+            edgeLabelBackground: "#27272a",
             // Sequence diagram
-            actorBkg: "#1c1c22",
-            actorBorder: "#52525b",
-            actorTextColor: "#f4f4f5",
-            actorLineColor: "#a1a1aa",
-            signalColor: "#f4f4f5",
-            signalTextColor: "#f4f4f5",
-            labelBoxBkgColor: "#1c1c22",
-            labelBoxBorderColor: "#52525b",
-            labelTextColor: "#f4f4f5",
-            loopTextColor: "#f4f4f5",
+            actorBkg: "#27272a",
+            actorBorder: "#71717a",
+            actorTextColor: "#ffffff",
+            actorLineColor: "#e4e4e7",
+            signalColor: "#ffffff",
+            signalTextColor: "#ffffff",
+            labelBoxBkgColor: "#27272a",
+            labelBoxBorderColor: "#71717a",
+            labelTextColor: "#ffffff",
+            loopTextColor: "#ffffff",
             noteBkgColor: "#27272a",
-            noteTextColor: "#f4f4f5",
-            noteBorderColor: "#52525b",
+            noteTextColor: "#ffffff",
+            noteBorderColor: "#71717a",
             // State & Class diagram
-            stateBkg: "#1c1c22",
-            stateLabelColor: "#f4f4f5",
-            classText: "#f4f4f5",
+            stateBkg: "#27272a",
+            stateLabelColor: "#ffffff",
+            classText: "#ffffff",
             // Pie chart
-            pieTitleTextColor: "#f4f4f5",
+            pieTitleTextColor: "#ffffff",
             pieSectionTextColor: "#ffffff",
-            pieLegendTextColor: "#f4f4f5",
+            pieLegendTextColor: "#ffffff",
             pieStrokeColor: "#000000",
             pieStrokeWidth: "2px",
             pie1: "#3b82f6",
@@ -478,43 +507,43 @@ function ensureMermaidInitialized(isDark: boolean): void {
             darkMode: false,
             background: "#ffffff",
             primaryColor: "#f4f4f5",
-            primaryTextColor: "#18181b",
-            primaryBorderColor: "#d4d4d8",
-            lineColor: "#71717a",
-            secondaryColor: "#f8fafc",
-            tertiaryColor: "#ffffff",
+            primaryTextColor: "#09090b",
+            primaryBorderColor: "#a1a1aa",
+            lineColor: "#3f3f46",
+            secondaryColor: "#ffffff",
+            tertiaryColor: "#fafafa",
             // Flowchart & general nodes
-            mainBkg: "#f4f4f5",
-            nodeBkg: "#f4f4f5",
-            nodeTextColor: "#18181b",
-            nodeBorder: "#d4d4d8",
-            clusterBkg: "#fafafa",
-            clusterBorder: "#e4e4e7",
-            defaultLinkColor: "#71717a",
-            titleColor: "#18181b",
+            mainBkg: "#ffffff",
+            nodeBkg: "#ffffff",
+            nodeTextColor: "#09090b",
+            nodeBorder: "#a1a1aa",
+            clusterBkg: "#f4f4f5",
+            clusterBorder: "#d4d4d8",
+            defaultLinkColor: "#3f3f46",
+            titleColor: "#09090b",
             edgeLabelBackground: "#ffffff",
             // Sequence diagram
-            actorBkg: "#f4f4f5",
-            actorBorder: "#d4d4d8",
-            actorTextColor: "#18181b",
-            actorLineColor: "#71717a",
-            signalColor: "#18181b",
-            signalTextColor: "#18181b",
-            labelBoxBkgColor: "#f4f4f5",
-            labelBoxBorderColor: "#d4d4d8",
-            labelTextColor: "#18181b",
-            loopTextColor: "#18181b",
-            noteBkgColor: "#f8fafc",
-            noteTextColor: "#18181b",
-            noteBorderColor: "#d4d4d8",
+            actorBkg: "#ffffff",
+            actorBorder: "#a1a1aa",
+            actorTextColor: "#09090b",
+            actorLineColor: "#3f3f46",
+            signalColor: "#09090b",
+            signalTextColor: "#09090b",
+            labelBoxBkgColor: "#ffffff",
+            labelBoxBorderColor: "#a1a1aa",
+            labelTextColor: "#09090b",
+            loopTextColor: "#09090b",
+            noteBkgColor: "#fef9c3",
+            noteTextColor: "#09090b",
+            noteBorderColor: "#ca8a04",
             // State & Class diagram
-            stateBkg: "#f4f4f5",
-            stateLabelColor: "#18181b",
-            classText: "#18181b",
+            stateBkg: "#ffffff",
+            stateLabelColor: "#09090b",
+            classText: "#09090b",
             // Pie chart
-            pieTitleTextColor: "#18181b",
+            pieTitleTextColor: "#09090b",
             pieSectionTextColor: "#ffffff",
-            pieLegendTextColor: "#18181b",
+            pieLegendTextColor: "#09090b",
             pieStrokeColor: "#ffffff",
             pieStrokeWidth: "2px",
             pie1: "#2563eb",

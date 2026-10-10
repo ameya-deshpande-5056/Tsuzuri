@@ -7,6 +7,7 @@ const buildTime = new Date().toISOString();
 const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig({
+  base: "./",
   clearScreen: false,
   server: {
     host: host || false,
@@ -54,6 +55,7 @@ export default defineConfig({
   },
   build: {
     target: "es2022",
+    assetsInlineLimit: (filePath: string) => filePath.endsWith(".woff2"),
     minify: !process.env.TAURI_ENV_DEBUG ? "esbuild" : false,
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
   },
