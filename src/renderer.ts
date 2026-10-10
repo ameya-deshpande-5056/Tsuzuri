@@ -442,46 +442,29 @@ export function clearMermaidCache(): void {
 
 function ensureMermaidInitialized(isDark: boolean): void {
   if (!mermaidInitialized || currentMermaidDark !== isDark) {
-    const nodeFill = isDark ? "#111827" : "#f8fafc";
-    const nodeBorder = isDark ? "#cbd5e1" : "#475569";
-    const textColor = isDark ? "#f4f4f5" : "#111827";
-    const edgeColor = isDark ? "#cbd5e1" : "#475569";
+    const primaryColor = isDark ? "#1f2937" : "#f8fafc";
+    const primaryTextColor = isDark ? "#f4f4f5" : "#111827";
+    const primaryBorderColor = isDark ? "#cbd5e1" : "#475569";
+    const lineColor = isDark ? "#cbd5e1" : "#475569";
 
     mermaid.initialize({
       startOnLoad: false,
       securityLevel: "loose",
-      theme: "base",
-      themeVariables: isDark
-        ? {
-            darkMode: true,
-            background: "transparent",
-            primaryColor: nodeFill,
-            primaryTextColor: textColor,
-            primaryBorderColor: nodeBorder,
-            lineColor: edgeColor,
-            secondaryColor: "#0f172a",
-            tertiaryColor: "#111827",
-            mainBkg: "transparent",
-            clusterBkg: "transparent",
-            clusterBorder: nodeBorder,
-            nodeTextColor: textColor,
-            fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-          }
-        : {
-            darkMode: false,
-            background: "transparent",
-            primaryColor: nodeFill,
-            primaryTextColor: textColor,
-            primaryBorderColor: nodeBorder,
-            lineColor: edgeColor,
-            secondaryColor: "#e2e8f0",
-            tertiaryColor: "#ffffff",
-            mainBkg: "transparent",
-            clusterBkg: "transparent",
-            clusterBorder: nodeBorder,
-            nodeTextColor: textColor,
-            fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-          },
+      theme: isDark ? "dark" : "neutral",
+      themeVariables: {
+        darkMode: isDark,
+        background: "transparent",
+        primaryColor,
+        primaryTextColor,
+        primaryBorderColor,
+        lineColor,
+        secondaryColor: isDark ? "#0f172a" : "#e2e8f0",
+        tertiaryColor: isDark ? "#111827" : "#ffffff",
+        clusterBkg: "transparent",
+        clusterBorder: primaryBorderColor,
+        nodeTextColor: primaryTextColor,
+        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      },
       flowchart: {
         useMaxWidth: true,
         htmlLabels: true,
@@ -490,10 +473,9 @@ function ensureMermaidInitialized(isDark: boolean): void {
       themeCSS: `
         svg { background: transparent !important; }
         .node rect, .node circle, .node ellipse, .node polygon, .node path,
-        .cluster rect, .cluster polygon { fill: ${nodeFill} !important; stroke: ${nodeBorder} !important; stroke-width: 1.5px !important; }
-        .label, .nodeLabel, .edgeLabel { fill: ${textColor} !important; color: ${textColor} !important; }
-        .edgePath .path, .edgeLabel rect { stroke: ${edgeColor} !important; }
-        .edgePath .arrowheadPath { fill: ${edgeColor} !important; }
+        .cluster rect, .cluster polygon { stroke-width: 1.5px !important; }
+        .label, .nodeLabel, .edgeLabel { fill: ${primaryTextColor} !important; color: ${primaryTextColor} !important; }
+        .edgePath .path, .edgeLabel rect { stroke: ${lineColor} !important; }
       `,
     });
     mermaidInitialized = true;
