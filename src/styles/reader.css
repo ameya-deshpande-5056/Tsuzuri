@@ -26,6 +26,18 @@
   color: var(--text-primary);
 }
 
+.katex,
+.katex-display-wrapper,
+.katex-inline-wrapper,
+.katex-display,
+.katex * {
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  white-space: normal !important;
+  hyphens: none !important;
+  text-wrap: wrap !important;
+}
+
 /* Document Headings */
 .reader-content h1,
 .reader-content h2,
@@ -313,6 +325,8 @@ pre.hljs:focus-within .code-copy-btn {
   max-width: 100% !important;
   height: auto !important;
   display: block;
+  background: transparent !important;
+  border-radius: 6px;
 }
 
 .mermaid-fallback-box {
